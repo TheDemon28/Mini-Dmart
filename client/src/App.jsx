@@ -33,6 +33,8 @@ function App() {
   const [auth, setAuth] = useState(getStoredAuth)
   const [cart, setCart] = useState(getStoredCart)
   const [products, setProducts] = useState(demoProducts)
+  const [orders, setOrders] = useState([])
+  const [returnRequests, setReturnRequests] = useState([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -48,6 +50,17 @@ function App() {
     loadProducts()
   }, [])
 
+  useEffect(() => {
+    if (!auth) {
+      setOrders([])
+      setReturnRequests([])
+      return
+    }
+
+    loadOrders()
+    loadReturnRequests()
+  }, [auth])
+
   const loadProducts = async () => {
     setLoading(true)
     try {
@@ -60,6 +73,40 @@ function App() {
       setProducts(demoProducts)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadOrders = async () => {
+    if (!auth?.token) return
+
+    try {
+      const endpoint = auth.user.role === 'customer' ? '/orders/my' : '/orders'
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        headers: { Authorization: `Bearer ${auth.token}` },
+      })
+      const payload = await response.json()
+      if (payload?.success && Array.isArray(payload.data)) {
+        setOrders(payload.data)
+      }
+    } catch {
+      setOrders([])
+    }
+  }
+
+  const loadReturnRequests = async () => {
+    if (!auth?.token) return
+
+    try {
+      const endpoint = auth.user.role === 'customer' ? '/returns/my' : '/returns'
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        headers: { Authorization: `Bearer ${auth.token}` },
+      })
+      const payload = await response.json()
+      if (payload?.success && Array.isArray(payload.data)) {
+        setReturnRequests(payload.data)
+      }
+    } catch {
+      setReturnRequests([])
     }
   }
 
@@ -194,7 +241,74 @@ function App() {
 
     setCart([])
     setMessage('Order placed successfully')
+    if (auth) {
+      await loadOrders()
+    }
     return payload
+  }
+
+  const handleCreateReturnRequest = async (formData) => {
+    if (!auth?.token) throw new Error('Login required')
+
+    const response = await fetch(`${API_BASE}/returns`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.token}`,
+      },
+      body: JSON.stringify(formData),
+    })
+
+    const result = await response.json()
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Return request failed')
+    }
+
+    await loadReturnRequests()
+    setMessage('Return/exchange request submitted')
+    return result
+  }
+
+  const handleUpdateReturnStatus = async (id, status) => {
+    if (!auth?.token) throw new Error('Login required')
+
+    const response = await fetch(`${API_BASE}/returns/${id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.token}`,
+      },
+      body: JSON.stringify({ status }),
+    })
+
+    const result = await response.json()
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Status update failed')
+    }
+
+    await loadReturnRequests()
+    return result
+  }
+
+  const handleUpdateOrderStatus = async (id, status) => {
+    if (!auth?.token) throw new Error('Login required')
+
+    const response = await fetch(`${API_BASE}/orders/${id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.token}`,
+      },
+      body: JSON.stringify({ status }),
+    })
+
+    const result = await response.json()
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Order update failed')
+    }
+
+    await loadOrders()
+    return result
   }
 
   const logout = () => setAuth(null)
@@ -215,7 +329,8 @@ function App() {
             <Link to="/">Home</Link>
             <Link to="/products">Products</Link>
             <Link to="/cart">Cart ({cart.length})</Link>
-            {auth?.user?.role === 'admin' && <Link to="/admin">Admin</Link>}
+            {auth && <Link to="/returns">Returns</Link>}
+            {(auth?.user?.role === 'admin' || auth?.user?.role === 'staff') && <Link to="/admin">Dashboard</Link>}
             {!auth ? (
               <>
                 <Link to="/login">Login</Link>
@@ -270,14 +385,30 @@ function App() {
               element={<CheckoutPage auth={auth} cart={cart} total={total} onCheckout={handleCheckout} />}
             />
             <Route
+              path="/returns"
+              element={
+                <ReturnsPage
+                  auth={auth}
+                  orders={orders}
+                  returnRequests={returnRequests}
+                  onCreateReturnRequest={handleCreateReturnRequest}
+                  onUpdateReturnStatus={handleUpdateReturnStatus}
+                />
+              }
+            />
+            <Route
               path="/admin"
               element={
                 <AdminPage
                   auth={auth}
                   products={products}
+                  orders={orders}
+                  returnRequests={returnRequests}
                   onCreateProduct={handleCreateProduct}
                   onDeleteProduct={handleDeleteProduct}
                   onReload={loadProducts}
+                  onUpdateOrderStatus={handleUpdateOrderStatus}
+                  onUpdateReturnStatus={handleUpdateReturnStatus}
                 />
               }
             />
@@ -322,7 +453,7 @@ function HomePage() {
 }
 
 function LoginPage({ auth, onLogin }) {
-  const [form, setForm] = useState({ email: 'admin@minidmart.com', password: 'Admin@123' })
+  const [form, setForm] = useState({ email: 'admin@minidmart.com', password: 'admin123' })
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
@@ -607,7 +738,89 @@ function CheckoutPage({ auth, cart, total, onCheckout }) {
   )
 }
 
-function AdminPage({ auth, products, onCreateProduct, onDeleteProduct, onReload }) {
+function ReturnsPage({ auth, orders, returnRequests, onCreateReturnRequest }) {
+  const navigate = useNavigate()
+  const [form, setForm] = useState({ orderId: '', requestedType: 'return', itemName: '', reason: '' })
+  const [error, setError] = useState('')
+
+  if (!auth) return <Navigate to="/login" replace />
+
+  const submitRequest = async (event) => {
+    event.preventDefault()
+    setError('')
+
+    try {
+      await onCreateReturnRequest(form)
+      setForm({ orderId: '', requestedType: 'return', itemName: '', reason: '' })
+      navigate('/products')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  return (
+    <div className="panel">
+      <div className="section-header">
+        <div>
+          <span className="eyebrow">Returns</span>
+          <h2>Return / exchange requests</h2>
+        </div>
+      </div>
+
+      <form className="form-grid" onSubmit={submitRequest}>
+        <label>
+          Order
+          <select value={form.orderId} onChange={(event) => setForm({ ...form, orderId: event.target.value })}>
+            <option value="">Choose order</option>
+            {orders.map((order) => (
+              <option key={order._id} value={order._id}>Order #{String(order._id).slice(-6)}</option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Request type
+          <select value={form.requestedType} onChange={(event) => setForm({ ...form, requestedType: event.target.value })}>
+            <option value="return">Return</option>
+            <option value="exchange">Exchange</option>
+          </select>
+        </label>
+
+        <label>
+          Item name
+          <input value={form.itemName} onChange={(event) => setForm({ ...form, itemName: event.target.value })} />
+        </label>
+
+        <label>
+          Reason
+          <textarea value={form.reason} onChange={(event) => setForm({ ...form, reason: event.target.value })} />
+        </label>
+
+        {error && <div className="error-box">{error}</div>}
+        <button type="submit" className="primary-btn full-width">Submit request</button>
+      </form>
+
+      <div className="request-list">
+        {returnRequests.length === 0 ? (
+          <p>No return or exchange requests yet.</p>
+        ) : (
+          returnRequests.map((request) => (
+            <div key={request._id} className="request-card">
+              <div>
+                <strong>{request.requestedType}</strong>
+                <span>{request.itemName || 'Order item'}</span>
+              </div>
+              <p>{request.reason}</p>
+              <small>Status: {request.status}</small>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
+
+function AdminPage({ auth, products, orders, returnRequests, onCreateProduct, onDeleteProduct, onReload, onUpdateOrderStatus, onUpdateReturnStatus }) {
   const navigate = useNavigate()
   const [form, setForm] = useState({
     name: '',
@@ -620,7 +833,7 @@ function AdminPage({ auth, products, onCreateProduct, onDeleteProduct, onReload 
   })
   const [error, setError] = useState('')
 
-  if (!auth || auth.user.role !== 'admin') {
+  if (!auth || !['admin', 'staff'].includes(auth.user.role)) {
     return <Navigate to="/login" replace />
   }
 
@@ -638,72 +851,153 @@ function AdminPage({ auth, products, onCreateProduct, onDeleteProduct, onReload 
     }
   }
 
+  const orderStatuses = ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'out_for_delivery', 'delivered']
+  const returnStatuses = ['pending', 'approved', 'rejected', 'processing', 'completed']
+
   return (
     <div className="panel">
       <div className="section-header">
         <div>
-          <span className="eyebrow">Admin</span>
-          <h2>Inventory management</h2>
+          <span className="eyebrow">Operations</span>
+          <h2>Staff & admin dashboard</h2>
         </div>
       </div>
 
-      <form onSubmit={submitProduct} className="form-grid admin-form">
-        <label>
-          Product name
-          <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-        </label>
-        <label>
-          Category
-          <select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
-            <option value="Vegetables">Vegetables</option>
-            <option value="Fruits">Fruits</option>
-            <option value="Dairy">Dairy</option>
-            <option value="Bakery">Bakery</option>
-            <option value="Grains">Grains</option>
-            <option value="Household">Household</option>
-          </select>
-        </label>
-        <label>
-          Price
-          <input
-            type="number"
-            value={form.price}
-            onChange={(event) => setForm({ ...form, price: Number(event.target.value) })}
-          />
-        </label>
-        <label>
-          Stock
-          <input
-            type="number"
-            value={form.stock}
-            onChange={(event) => setForm({ ...form, stock: Number(event.target.value) })}
-          />
-        </label>
-        <label className="full-span">
-          Description
-          <textarea
-            value={form.description}
-            onChange={(event) => setForm({ ...form, description: event.target.value })}
-          />
-        </label>
-        {error && <div className="error-box">{error}</div>}
-        <button type="submit" className="primary-btn full-width">Add product</button>
-      </form>
+      <div className="stats-box dashboard-stats">
+        <div>
+          <strong>{orders.length}</strong>
+          <span>Total orders</span>
+        </div>
+        <div>
+          <strong>{returnRequests.length}</strong>
+          <span>Return requests</span>
+        </div>
+        <div>
+          <strong>{products.length}</strong>
+          <span>Products</span>
+        </div>
+      </div>
 
-      <div className="product-grid admin-grid">
-        {products.map((product) => (
-          <article key={product._id} className="product-card small-card">
-            <h3>{product.name}</h3>
-            <p>{product.category}</p>
-            <div className="price-row">
-              <strong>₹{product.price}</strong>
-              <span>{product.stock} left</span>
+      <div className="dashboard-grid">
+        <div className="dashboard-section">
+          <h3>Inventory management</h3>
+          <form onSubmit={submitProduct} className="form-grid admin-form">
+            <label>
+              Product name
+              <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+            </label>
+            <label>
+              Category
+              <select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
+                <option value="Vegetables">Vegetables</option>
+                <option value="Fruits">Fruits</option>
+                <option value="Dairy">Dairy</option>
+                <option value="Bakery">Bakery</option>
+                <option value="Grains">Grains</option>
+                <option value="Household">Household</option>
+              </select>
+            </label>
+            <label>
+              Price
+              <input
+                type="number"
+                value={form.price}
+                onChange={(event) => setForm({ ...form, price: Number(event.target.value) })}
+              />
+            </label>
+            <label>
+              Stock
+              <input
+                type="number"
+                value={form.stock}
+                onChange={(event) => setForm({ ...form, stock: Number(event.target.value) })}
+              />
+            </label>
+            <label className="full-span">
+              Description
+              <textarea
+                value={form.description}
+                onChange={(event) => setForm({ ...form, description: event.target.value })}
+              />
+            </label>
+            {error && <div className="error-box">{error}</div>}
+            <button type="submit" className="primary-btn full-width">Add product</button>
+          </form>
+
+          <div className="product-grid admin-grid">
+            {products.map((product) => (
+              <article key={product._id} className="product-card small-card">
+                <h3>{product.name}</h3>
+                <p>{product.category}</p>
+                <div className="price-row">
+                  <strong>₹{product.price}</strong>
+                  <span>{product.stock} left</span>
+                </div>
+                <button type="button" className="ghost-btn" onClick={() => onDeleteProduct(product._id)}>
+                  Delete
+                </button>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <div className="dashboard-section">
+          <h3>Order lifecycle</h3>
+          {orders.length === 0 ? <p>No orders yet.</p> : (
+            <div className="stack-list">
+              {orders.map((order) => (
+                <div key={order._id} className="stack-card">
+                  <div className="stack-row">
+                    <strong>#{String(order._id).slice(-6)}</strong>
+                    <span>{order.orderType}</span>
+                  </div>
+                  <p>{order.items?.length || 0} items • ₹{order.total}</p>
+                  <div className="status-row">
+                    {orderStatuses.map((status) => (
+                      <button
+                        key={status}
+                        type="button"
+                        className={order.status === status ? 'status-button active' : 'status-button'}
+                        onClick={() => onUpdateOrderStatus(order._id, status)}
+                      >
+                        {status.replace(/_/g, ' ')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-            <button type="button" className="ghost-btn" onClick={() => onDeleteProduct(product._id)}>
-              Delete
-            </button>
-          </article>
-        ))}
+          )}
+        </div>
+
+        <div className="dashboard-section">
+          <h3>Return & exchange queue</h3>
+          {returnRequests.length === 0 ? <p>No return requests.</p> : (
+            <div className="stack-list">
+              {returnRequests.map((request) => (
+                <div key={request._id} className="stack-card">
+                  <div className="stack-row">
+                    <strong>{request.requestedType}</strong>
+                    <span>{request.status}</span>
+                  </div>
+                  <p>{request.itemName || 'Item'} • {request.reason}</p>
+                  <div className="status-row">
+                    {returnStatuses.map((status) => (
+                      <button
+                        key={status}
+                        type="button"
+                        className={request.status === status ? 'status-button active' : 'status-button'}
+                        onClick={() => onUpdateReturnStatus(request._id, status)}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
