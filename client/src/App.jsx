@@ -318,17 +318,18 @@ function App() {
       <div className="app-shell">
         <header className="topbar">
           <div className="brand-group">
-            <div className="logo">MD</div>
-            <div>
-              <div className="brand-name">Mini D-Mart</div>
-              <small>Fresh groceries, fast delivery</small>
+            <div className="logo">
+              <div className="text-logo">
+                <span className="logo-word">miniDmart</span>
+              </div>
             </div>
+            <small>Fresh groceries, fast delivery</small>
           </div>
 
           <nav className="nav">
             <Link to="/">Home</Link>
             <Link to="/products">Products</Link>
-            <Link to="/cart">Cart ({cart.length})</Link>
+            <Link to="/cart" className="cart-btn">Cart <span className="cart-count">{cart.length}</span></Link>
             {auth && <Link to="/returns">Returns</Link>}
             {(auth?.user?.role === 'admin' || auth?.user?.role === 'staff') && <Link to="/admin">Dashboard</Link>}
             {!auth ? (
