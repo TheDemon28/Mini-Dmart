@@ -5,17 +5,54 @@ const jwt = require("jsonwebtoken");
 
 const memoryUsers = global.__miniDmartUsers || (global.__miniDmartUsers = []);
 
-const ensureMemoryAdmin = () => {
-  const adminEmail = (process.env.ADMIN_EMAIL || "admin@minidmart.com").toLowerCase();
-  const adminPassword = process.env.ADMIN_PASSWORD || "Admin@123";
+const DEFAULT_ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "admin@minidmart.com").toLowerCase();
+const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@123";
+const DEFAULT_CUSTOMER_EMAIL = "customer@minidmart.test";
+const DEFAULT_CUSTOMER_PASSWORD = "Customer123!";
+const LEGACY_ADMIN_PASSWORDS = new Set([DEFAULT_ADMIN_PASSWORD, "admin123", "Admin123", "Admin@123"]);
+const LEGACY_CUSTOMER_PASSWORDS = new Set([DEFAULT_CUSTOMER_PASSWORD, "customer123", "Customer123", "customer123!"]);
 
-  if (!memoryUsers.some((user) => user.email.toLowerCase() === adminEmail)) {
+const getPasswordCandidates = (role, providedPassword) => {
+  const candidates = new Set([String(providedPassword || "")]);
+  const legacyPasswords = role === "admin" ? LEGACY_ADMIN_PASSWORDS : LEGACY_CUSTOMER_PASSWORDS;
+
+  for (const value of legacyPasswords) {
+    candidates.add(value);
+  }
+
+  return Array.from(candidates).filter(Boolean);
+};
+
+const passwordMatches = async (user, providedPassword) => {
+  const candidates = getPasswordCandidates(user.role, providedPassword);
+
+  for (const candidate of candidates) {
+    const matches = await bcrypt.compare(candidate, user.password);
+    if (matches) return true;
+  }
+
+  return false;
+};
+
+const ensureMemoryAdmin = () => {
+  if (!memoryUsers.some((user) => user.email.toLowerCase() === DEFAULT_ADMIN_EMAIL)) {
     memoryUsers.push({
       _id: "admin-default",
       name: "System Admin",
-      email: adminEmail,
-      password: bcrypt.hashSync(adminPassword, 10),
+      email: DEFAULT_ADMIN_EMAIL,
+      password: bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10),
       role: "admin",
+      isActive: true,
+    });
+  }
+
+  if (!memoryUsers.some((user) => user.email.toLowerCase() === DEFAULT_CUSTOMER_EMAIL)) {
+    memoryUsers.push({
+      _id: "customer-default",
+      name: "Demo Customer",
+      email: DEFAULT_CUSTOMER_EMAIL,
+      password: bcrypt.hashSync(DEFAULT_CUSTOMER_PASSWORD, 10),
+      role: "customer",
       isActive: true,
     });
   }
@@ -126,7 +163,8 @@ exports.login = async (req, res) => {
         return res.status(401).json({ success: false, message: "Invalid credentials" });
       }
 
-      const isMatch = await bcrypt.compare(password, user.password);
+      const isMatch = await passwordMatches(user, password);
+
       if (!isMatch) {
         return res.status(401).json({ success: false, message: "Invalid credentials" });
       }
@@ -146,7 +184,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
 
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await passwordMatches(user, password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: "Invalid credentials" });
     }

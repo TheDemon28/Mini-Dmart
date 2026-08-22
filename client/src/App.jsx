@@ -37,6 +37,7 @@ function App() {
   const [returnRequests, setReturnRequests] = useState([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   useEffect(() => {
     localStorage.setItem('miniDmartAuth', JSON.stringify(auth))
@@ -318,38 +319,47 @@ function App() {
       <div className="app-shell">
         <header className="topbar">
           <div className="brand-group">
-            <div className="logo">
-              <div className="text-logo">
-                <span className="logo-word">miniDmart</span>
-              </div>
+            <div className="text-logo">
+              <span className="logo-mark">●</span>
+              <span className="brand-name">miniDmart</span>
             </div>
-            <small>Fresh groceries, fast delivery</small>
           </div>
 
           <nav className="nav">
-            <Link to="/">Home</Link>
-            <Link to="/products">Products</Link>
-            <Link to="/cart" className="cart-btn">Cart <span className="cart-count">{cart.length}</span></Link>
-            {auth && <Link to="/returns">Returns</Link>}
-            {(auth?.user?.role === 'admin' || auth?.user?.role === 'staff') && <Link to="/admin">Dashboard</Link>}
+            <Link to="/products" className="nav-link">Shop</Link>
+            <Link to={auth ? '/returns' : '/login'} className="nav-link">My orders</Link>
+            {(auth?.user?.role === 'admin' || auth?.user?.role === 'staff') && (
+              <Link to="/admin" className="nav-link">Dashboard</Link>
+            )}
+            <Link to="/cart" className="cart-link">
+              Cart
+              <span className="cart-count">{cart.length}</span>
+            </Link>
             {!auth ? (
-              <>
-                <Link to="/login">Login</Link>
-                <Link to="/register">Register</Link>
-              </>
+              <button type="button" className="sign-in-btn" onClick={() => setShowAuthModal(true)}>
+                Sign in
+              </button>
             ) : (
-              <button type="button" className="link-button" onClick={logout}>
+              <button type="button" className="sign-in-btn logout-btn" onClick={logout}>
                 Logout
               </button>
             )}
           </nav>
         </header>
 
+        {showAuthModal && (
+          <AuthModal
+            onClose={() => setShowAuthModal(false)}
+            onLogin={handleLogin}
+            onSuccess={() => setShowAuthModal(false)}
+          />
+        )}
+
         {message && <div className="flash-message">{message}</div>}
 
         <main className="page-shell">
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<HomePage onOpenLogin={() => setShowAuthModal(true)} />} />
             <Route
               path="/login"
               element={<LoginPage auth={auth} onLogin={handleLogin} />}
@@ -420,41 +430,117 @@ function App() {
   )
 }
 
-function HomePage() {
+function HomePage({ onOpenLogin }) {
   return (
     <div className="hero-panel">
       <div className="hero-copy">
-        <span className="eyebrow">Smart grocery shopping</span>
-        <h1>Fresh essentials for everyday living.</h1>
-        <p>
-          Shop groceries, schedule pickup or home delivery, and keep operation simple for customers,
-          staff, and admins.
-        </p>
+        <span className="eyebrow">Freshness, on your schedule</span>
+        <h1>Groceries that fit your day.</h1>
+        <p>Pick up when it suits you or get essentials delivered to your door.</p>
         <div className="cta-row">
-          <Link className="primary-btn" to="/products">Shop now</Link>
-          <Link className="secondary-btn" to="/login">Login</Link>
+          <button type="button" className="primary-btn" onClick={onOpenLogin}>
+            Browse groceries
+          </button>
         </div>
       </div>
-      <div className="stats-box">
+
+      <div className="hero-art" aria-hidden="true">
+        <div className="carrot">
+          <span className="leaf leaf-a" />
+          <span className="leaf leaf-b" />
+          <span className="leaf leaf-c" />
+        </div>
+      </div>
+
+      <div className="hero-stats">
         <div>
-          <strong>2 hrs</strong>
-          <span>Fast pickup</span>
+          <strong>30 min</strong>
+          <span>pickup slots</span>
         </div>
         <div>
-          <strong>24/7</strong>
-          <span>Store access</span>
+          <strong>Live</strong>
+          <span>stock checks</span>
         </div>
         <div>
-          <strong>1 click</strong>
-          <span>Checkout</span>
+          <strong>Easy</strong>
+          <span>returns & exchanges</span>
         </div>
       </div>
     </div>
   )
 }
 
+function AuthModal({ onClose, onLogin, onSuccess }) {
+  const [form, setForm] = useState({
+    email: 'admin@minidmart.com',
+    password: 'Admin@123',
+  })
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setError('')
+    setIsSubmitting(true)
+
+    try {
+      await onLogin(form)
+      onSuccess()
+    } catch (err) {
+      setError(err.message || 'Login failed')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="auth-overlay" onClick={onClose}>
+      <div className="auth-modal" onClick={(event) => event.stopPropagation()}>
+        <button type="button" className="modal-close" onClick={onClose} aria-label="Close login form">
+          ×
+        </button>
+
+        <p className="modal-kicker">WELCOME</p>
+        <h2>Sign in to Mini D-Mart</h2>
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          <label>
+            <span>Email</span>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(event) => setForm({ ...form, email: event.target.value })}
+              placeholder="customer@minidmart.test"
+            />
+          </label>
+
+          <label>
+            <span>Password</span>
+            <input
+              type="password"
+              value={form.password}
+              onChange={(event) => setForm({ ...form, password: event.target.value })}
+              placeholder="••••••••"
+            />
+          </label>
+
+          {error && <div className="error-box">{error}</div>}
+
+          <button type="submit" className="primary-btn submit-btn" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in...' : 'Sign in'}
+          </button>
+        </form>
+
+        <p className="demo-note">
+          Demo: admin@minidmart.com / Admin@123 | customer@minidmart.test / Customer123!
+        </p>
+      </div>
+    </div>
+  )
+}
+
 function LoginPage({ auth, onLogin }) {
-  const [form, setForm] = useState({ email: 'admin@minidmart.com', password: 'admin123' })
+  const [form, setForm] = useState({ email: 'admin@minidmart.com', password: 'Admin@123' })
   const [error, setError] = useState('')
   const navigate = useNavigate()
 

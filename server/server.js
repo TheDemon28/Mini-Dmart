@@ -54,6 +54,15 @@ const startServer = async () => {
     } else {
       const connection = await mongoose.connect(process.env.MONGO_URI);
       console.log(`MongoDB connected: ${connection.connection.host}`);
+
+      try {
+        await connection.connection.db.collection("orders").dropIndex("orderNumber_1");
+        console.log("Removed stale orderNumber index from orders collection.");
+      } catch (error) {
+        if (error.code !== 27) {
+          console.warn(`Order index cleanup warning: ${error.message}`);
+        }
+      }
     }
   } catch (error) {
     console.warn(`MongoDB connection error: ${error.message}. Continuing with in-memory demo mode.`);
