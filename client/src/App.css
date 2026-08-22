@@ -1,7 +1,8 @@
 .app-shell {
-  max-width: 1200px;
+  max-width: 1480px;
+  min-height: 100vh;
   margin: 0 auto;
-  padding: 24px;
+  padding: 28px 32px 48px;
   color: #1f2937;
 }
 
@@ -9,33 +10,37 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 24px;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+  gap: 20px;
+  padding: 18px 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
 }
 
 .brand-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .logo {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #16a34a, #22c55e 58%, #84cc16);
   color: white;
   display: grid;
   place-items: center;
   font-weight: 800;
+  box-shadow: 0 10px 20px rgba(34, 197, 94, 0.25);
 }
 
 .brand-name {
-  font-weight: 700;
-  font-size: 1.1rem;
+  font-weight: 800;
+  font-size: 1.18rem;
+  color: #111827;
 }
 
 .brand-group small {
@@ -45,7 +50,7 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -57,17 +62,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 10px 16px;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
   border: none;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .nav a {
   color: #374151;
+  background: transparent;
 }
 
 .nav a:hover,
@@ -76,6 +82,7 @@
 .secondary-btn:hover,
 .ghost-btn:hover {
   transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
 }
 
 .link-button,
@@ -85,8 +92,9 @@
 }
 
 .primary-btn {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  background: linear-gradient(135deg, #16a34a, #22c55e 60%, #84cc16);
   color: white;
+  box-shadow: 0 12px 20px rgba(34, 197, 94, 0.2);
 }
 
 .secondary-btn {
@@ -95,25 +103,25 @@
 }
 
 .page-shell {
-  padding-top: 24px;
+  padding-top: 28px;
 }
 
 .panel {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.05);
 }
 
 .hero-panel {
   display: grid;
-  grid-template-columns: 1.6fr 1fr;
+  grid-template-columns: 1.7fr 1fr;
   gap: 20px;
-  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 35%, #f5f3ff 100%);
-  border: 1px solid #dcfce7;
-  border-radius: 24px;
-  padding: 36px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 40%, #f5f3ff 100%);
+  border: 1px solid rgba(34, 197, 94, 0.15);
+  border-radius: 30px;
+  padding: 38px;
 }
 
 .hero-copy {
@@ -127,23 +135,27 @@
   width: fit-content;
   background: #dcfce7;
   color: #166534;
-  font-weight: 700;
-  font-size: 0.8rem;
-  padding: 6px 10px;
+  font-weight: 800;
+  font-size: 0.78rem;
+  padding: 6px 12px;
   border-radius: 999px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .hero-copy h1 {
-  font-size: clamp(2.2rem, 5vw, 4rem);
-  margin: 0 0 16px;
-  line-height: 1.1;
+  font-size: clamp(2.3rem, 5vw, 4.2rem);
+  margin: 0 0 18px;
+  line-height: 1.05;
+  letter-spacing: -0.05em;
 }
 
 .hero-copy p {
   color: #4b5563;
-  font-size: 1.05rem;
+  font-size: 1.06rem;
   margin-bottom: 24px;
+  max-width: 58ch;
 }
 
 .cta-row {
@@ -154,9 +166,9 @@
 
 .stats-box {
   background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(22, 163, 74, 0.12);
-  border-radius: 18px;
-  padding: 20px;
+  border: 1px solid rgba(34, 197, 94, 0.12);
+  border-radius: 20px;
+  padding: 22px;
   display: grid;
   gap: 16px;
 }
@@ -175,7 +187,7 @@
 }
 
 .stats-box strong {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   color: #111827;
 }
 
@@ -193,7 +205,8 @@
 
 .section-header h2 {
   margin: 0;
-  font-size: 1.8rem;
+  font-size: 2rem;
+  letter-spacing: -0.04em;
 }
 
 .toolbar-inline {
@@ -212,27 +225,46 @@
   width: 100%;
   box-sizing: border-box;
   border: 1px solid #d1d5db;
-  border-radius: 10px;
-  padding: 11px 12px;
+  border-radius: 12px;
+  padding: 12px 14px;
   font: inherit;
   background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.toolbar-inline input:focus,
+.form-grid input:focus,
+.form-grid textarea:focus,
+.form-grid select:focus,
+.checkout-form input:focus,
+.checkout-form textarea:focus,
+.checkout-form select:focus {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
 }
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 18px;
 }
 
 .product-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 220px;
   border: 1px solid #e5e7eb;
-  border-radius: 18px;
+  border-radius: 22px;
   padding: 18px;
-  background: linear-gradient(180deg, #ffffff, #f9fafb);
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.03);
 }
 
 .product-card h3 {
   margin: 12px 0 10px;
+  font-size: 1.28rem;
 }
 
 .product-card p {
@@ -246,8 +278,10 @@
   color: #0f766e;
   padding: 6px 10px;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .price-row {
@@ -259,7 +293,7 @@
 }
 
 .price-row strong {
-  font-size: 1.3rem;
+  font-size: 1.45rem;
 }
 
 .form-panel {
@@ -277,17 +311,17 @@
 .checkout-form label {
   display: grid;
   gap: 8px;
-  font-weight: 600;
+  font-weight: 700;
   color: #374151;
 }
 
 .error-box {
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #b91c1c;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .full-width {
@@ -299,7 +333,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 16px;
-  padding: 12px 0;
+  padding: 14px 0 0;
 }
 
 .cart-list {
@@ -309,15 +343,16 @@
 
 .cart-item {
   display: grid;
-  grid-template-columns: 1.3fr 180px 110px 120px;
+  grid-template-columns: 1.4fr 180px 110px 120px;
   align-items: center;
   gap: 14px;
-  padding: 14px 0;
+  padding: 16px 0;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .cart-item h3 {
   margin: 0 0 6px;
+  font-size: 1.1rem;
 }
 
 .cart-item p {
@@ -332,7 +367,8 @@
   gap: 8px;
   border: 1px solid #d1d5db;
   border-radius: 999px;
-  padding: 6px;
+  padding: 7px 10px;
+  background: #f8fafc;
 }
 
 .quantity-controls button {
@@ -340,8 +376,9 @@
   height: 28px;
   border: none;
   border-radius: 50%;
-  background: #f3f4f6;
+  background: #e5e7eb;
   cursor: pointer;
+  font-size: 1.1rem;
 }
 
 .checkout-bar {
@@ -365,7 +402,7 @@
   justify-content: space-between;
   gap: 18px;
   padding: 14px 18px;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
 }
@@ -383,6 +420,7 @@
   color: #166534;
   border-radius: 12px;
   padding: 12px 16px;
+  font-weight: 700;
 }
 
 .admin-form {
@@ -408,7 +446,7 @@
 .stack-card {
   border: 1px solid #e5e7eb;
   background: #f9fafb;
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 16px;
 }
 
@@ -439,7 +477,7 @@
 
 .dashboard-section {
   border: 1px solid #e5e7eb;
-  border-radius: 18px;
+  border-radius: 22px;
   padding: 18px;
   background: #fff;
 }
@@ -447,6 +485,7 @@
 .dashboard-section h3 {
   margin-top: 0;
   margin-bottom: 18px;
+  font-size: 1.2rem;
 }
 
 .dashboard-stats {
@@ -487,7 +526,7 @@
 
 @media (max-width: 780px) {
   .app-shell {
-    padding: 14px;
+    padding: 16px 14px 26px;
   }
 
   .topbar,
