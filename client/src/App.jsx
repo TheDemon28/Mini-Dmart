@@ -1,121 +1,711 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+
+const demoProducts = [
+  { _id: 'p1', name: 'Fresh Apples', description: 'Crisp and juicy red apples', category: 'Fruits', price: 120, stock: 40 },
+  { _id: 'p2', name: 'Bananas', description: 'Naturally sweet and healthy', category: 'Fruits', price: 60, stock: 50 },
+  { _id: 'p3', name: 'Milk 1L', description: 'Farm fresh whole milk', category: 'Dairy', price: 70, stock: 30 },
+  { _id: 'p4', name: 'Brown Rice', description: 'Healthy grain staple', category: 'Grains', price: 110, stock: 25 },
+  { _id: 'p5', name: 'Tomatoes', description: 'Fresh kitchen staple', category: 'Vegetables', price: 80, stock: 35 },
+  { _id: 'p6', name: 'Bread', description: 'Soft whole wheat loaf', category: 'Bakery', price: 55, stock: 22 },
+]
+
+function getStoredAuth() {
+  try {
+    return JSON.parse(localStorage.getItem('miniDmartAuth') || 'null')
+  } catch {
+    return null
+  }
+}
+
+function getStoredCart() {
+  try {
+    return JSON.parse(localStorage.getItem('miniDmartCart') || '[]')
+  } catch {
+    return []
+  }
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [auth, setAuth] = useState(getStoredAuth)
+  const [cart, setCart] = useState(getStoredCart)
+  const [products, setProducts] = useState(demoProducts)
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    localStorage.setItem('miniDmartAuth', JSON.stringify(auth))
+  }, [auth])
+
+  useEffect(() => {
+    localStorage.setItem('miniDmartCart', JSON.stringify(cart))
+  }, [cart])
+
+  useEffect(() => {
+    loadProducts()
+  }, [])
+
+  const loadProducts = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`${API_BASE}/products`)
+      const payload = await response.json()
+      if (payload?.success && Array.isArray(payload.data?.items)) {
+        setProducts(payload.data.items)
+      }
+    } catch {
+      setProducts(demoProducts)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const addToCart = (product) => {
+    setCart((current) => {
+      const existingItem = current.find((item) => item._id === product._id)
+      if (existingItem) {
+        return current.map((item) =>
+          item._id === product._id
+            ? { ...item, quantity: Math.min(item.quantity + 1, product.stock || 99) }
+            : item,
+        )
+      }
+
+      return [...current, { ...product, quantity: 1 }]
+    })
+    setMessage(`${product.name} added to cart`)
+  }
+
+  const updateCartQuantity = (productId, delta) => {
+    setCart((current) =>
+      current
+        .map((item) =>
+          item._id === productId
+            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
+            : item,
+        )
+        .filter((item) => item.quantity > 0),
+    )
+  }
+
+  const removeFromCart = (productId) => {
+    setCart((current) => current.filter((item) => item._id !== productId))
+  }
+
+  const total = useMemo(
+    () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [cart],
+  )
+
+  const handleLogin = async (credentials) => {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    })
+
+    const payload = await response.json()
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.message || 'Login failed')
+    }
+
+    setAuth({ token: payload.data.token, user: payload.data.user })
+    return payload
+  }
+
+  const handleRegister = async (payload) => {
+    const response = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    const result = await response.json()
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Registration failed')
+    }
+
+    setAuth({ token: result.data.token, user: result.data.user })
+    return result
+  }
+
+  const handleCreateProduct = async (payload) => {
+    if (!auth?.token) throw new Error('Login required to create product')
+
+    const response = await fetch(`${API_BASE}/products`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.token}`,
+      },
+      body: JSON.stringify(payload),
+    })
+
+    const result = await response.json()
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Product creation failed')
+    }
+
+    await loadProducts()
+    return result
+  }
+
+  const handleDeleteProduct = async (productId) => {
+    if (!auth?.token) throw new Error('Login required')
+
+    const response = await fetch(`${API_BASE}/products/${productId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${auth.token}` },
+    })
+
+    const result = await response.json()
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Deletion failed')
+    }
+
+    await loadProducts()
+    return result
+  }
+
+  const handleCheckout = async (checkoutData) => {
+    if (!auth?.token) throw new Error('Login required before checkout')
+
+    const response = await fetch(`${API_BASE}/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.token}`,
+      },
+      body: JSON.stringify({
+        orderType: checkoutData.orderType,
+        deliveryAddress: checkoutData.deliveryAddress || '',
+        notes: checkoutData.notes || '',
+        items: cart.map((item) => ({ productId: item._id, quantity: item.quantity })),
+      }),
+    })
+
+    const payload = await response.json()
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.message || 'Checkout failed')
+    }
+
+    setCart([])
+    setMessage('Order placed successfully')
+    return payload
+  }
+
+  const logout = () => setAuth(null)
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <BrowserRouter>
+      <div className="app-shell">
+        <header className="topbar">
+          <div className="brand-group">
+            <div className="logo">MD</div>
+            <div>
+              <div className="brand-name">Mini D-Mart</div>
+              <small>Fresh groceries, fast delivery</small>
+            </div>
+          </div>
+
+          <nav className="nav">
+            <Link to="/">Home</Link>
+            <Link to="/products">Products</Link>
+            <Link to="/cart">Cart ({cart.length})</Link>
+            {auth?.user?.role === 'admin' && <Link to="/admin">Admin</Link>}
+            {!auth ? (
+              <>
+                <Link to="/login">Login</Link>
+                <Link to="/register">Register</Link>
+              </>
+            ) : (
+              <button type="button" className="link-button" onClick={logout}>
+                Logout
+              </button>
+            )}
+          </nav>
+        </header>
+
+        {message && <div className="flash-message">{message}</div>}
+
+        <main className="page-shell">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route
+              path="/login"
+              element={<LoginPage auth={auth} onLogin={handleLogin} />}
+            />
+            <Route
+              path="/register"
+              element={<RegisterPage auth={auth} onRegister={handleRegister} />}
+            />
+            <Route
+              path="/products"
+              element={
+                <ProductsPage
+                  products={products}
+                  loading={loading}
+                  onAddToCart={addToCart}
+                  onReload={loadProducts}
+                />
+              }
+            />
+            <Route
+              path="/cart"
+              element={
+                <CartPage
+                  cart={cart}
+                  total={total}
+                  onUpdateQuantity={updateCartQuantity}
+                  onRemove={removeFromCart}
+                  auth={auth}
+                />
+              }
+            />
+            <Route
+              path="/checkout"
+              element={<CheckoutPage auth={auth} cart={cart} total={total} onCheckout={handleCheckout} />}
+            />
+            <Route
+              path="/admin"
+              element={
+                <AdminPage
+                  auth={auth}
+                  products={products}
+                  onCreateProduct={handleCreateProduct}
+                  onDeleteProduct={handleDeleteProduct}
+                  onReload={loadProducts}
+                />
+              }
+            />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
+  )
+}
+
+function HomePage() {
+  return (
+    <div className="hero-panel">
+      <div className="hero-copy">
+        <span className="eyebrow">Smart grocery shopping</span>
+        <h1>Fresh essentials for everyday living.</h1>
+        <p>
+          Shop groceries, schedule pickup or home delivery, and keep operation simple for customers,
+          staff, and admins.
+        </p>
+        <div className="cta-row">
+          <Link className="primary-btn" to="/products">Shop now</Link>
+          <Link className="secondary-btn" to="/login">Login</Link>
+        </div>
+      </div>
+      <div className="stats-box">
+        <div>
+          <strong>2 hrs</strong>
+          <span>Fast pickup</span>
         </div>
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+          <strong>24/7</strong>
+          <span>Store access</span>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        <div>
+          <strong>1 click</strong>
+          <span>Checkout</span>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      </div>
+    </div>
+  )
+}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+function LoginPage({ auth, onLogin }) {
+  const [form, setForm] = useState({ email: 'admin@minidmart.com', password: 'Admin@123' })
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
+
+  if (auth) return <Navigate to="/products" replace />
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setError('')
+
+    try {
+      await onLogin(form)
+      navigate('/products')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  return (
+    <div className="panel form-panel">
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit} className="form-grid">
+        <label>
+          Email
+          <input
+            type="email"
+            value={form.email}
+            onChange={(event) => setForm({ ...form, email: event.target.value })}
+          />
+        </label>
+        <label>
+          Password
+          <input
+            type="password"
+            value={form.password}
+            onChange={(event) => setForm({ ...form, password: event.target.value })}
+          />
+        </label>
+        {error && <div className="error-box">{error}</div>}
+        <button type="submit" className="primary-btn full-width">Login</button>
+      </form>
+    </div>
+  )
+}
+
+function RegisterPage({ auth, onRegister }) {
+  const [form, setForm] = useState({ name: 'New Customer', email: '', password: '', role: 'customer' })
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
+
+  if (auth) return <Navigate to="/products" replace />
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setError('')
+
+    try {
+      await onRegister(form)
+      navigate('/products')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  return (
+    <div className="panel form-panel">
+      <h2>Register</h2>
+      <form onSubmit={handleSubmit} className="form-grid">
+        <label>
+          Name
+          <input
+            value={form.name}
+            onChange={(event) => setForm({ ...form, name: event.target.value })}
+          />
+        </label>
+        <label>
+          Email
+          <input
+            type="email"
+            value={form.email}
+            onChange={(event) => setForm({ ...form, email: event.target.value })}
+          />
+        </label>
+        <label>
+          Password
+          <input
+            type="password"
+            value={form.password}
+            onChange={(event) => setForm({ ...form, password: event.target.value })}
+          />
+        </label>
+        <label>
+          Role
+          <select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>
+            <option value="customer">Customer</option>
+            <option value="staff">Staff</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+        {error && <div className="error-box">{error}</div>}
+        <button type="submit" className="primary-btn full-width">Create account</button>
+      </form>
+    </div>
+  )
+}
+
+function ProductsPage({ products, loading, onAddToCart, onReload }) {
+  const [query, setQuery] = useState('')
+
+  const visibleProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(query.toLowerCase()) ||
+      product.category.toLowerCase().includes(query.toLowerCase()),
+  )
+
+  return (
+    <div className="panel">
+      <div className="section-header">
+        <div>
+          <span className="eyebrow">Browse</span>
+          <h2>Trending groceries</h2>
+        </div>
+        <div className="toolbar-inline">
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search products"
+          />
+          <button type="button" className="secondary-btn" onClick={onReload}>Refresh</button>
+        </div>
+      </div>
+
+      {loading ? (
+        <p>Loading products...</p>
+      ) : (
+        <div className="product-grid">
+          {visibleProducts.map((product) => (
+            <article key={product._id} className="product-card">
+              <div className="product-tag">{product.category}</div>
+              <h3>{product.name}</h3>
+              <p>{product.description}</p>
+              <div className="price-row">
+                <strong>₹{product.price}</strong>
+                <span>{product.stock} in stock</span>
+              </div>
+              <button type="button" className="primary-btn" onClick={() => onAddToCart(product)}>
+                Add to cart
+              </button>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CartPage({ cart, total, onUpdateQuantity, onRemove, auth }) {
+  return (
+    <div className="panel">
+      <div className="section-header">
+        <div>
+          <span className="eyebrow">Your bag</span>
+          <h2>Shopping cart</h2>
+        </div>
+      </div>
+
+      {cart.length === 0 ? (
+        <div className="empty-state">
+          <p>Your cart is empty.</p>
+          <Link className="primary-btn" to="/products">Continue shopping</Link>
+        </div>
+      ) : (
+        <>
+          <div className="cart-list">
+            {cart.map((item) => (
+              <div key={item._id} className="cart-item">
+                <div>
+                  <h3>{item.name}</h3>
+                  <p>₹{item.price} each</p>
+                </div>
+                <div className="quantity-controls">
+                  <button type="button" onClick={() => onUpdateQuantity(item._id, -1)}>-</button>
+                  <span>{item.quantity}</span>
+                  <button type="button" onClick={() => onUpdateQuantity(item._id, 1)}>+</button>
+                </div>
+                <strong>₹{item.price * item.quantity}</strong>
+                <button type="button" className="ghost-btn" onClick={() => onRemove(item._id)}>
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="checkout-bar">
+            <div>
+              <span>Subtotal</span>
+              <strong>₹{total}</strong>
+            </div>
+            {!auth ? (
+              <Link className="primary-btn" to="/login">Login to checkout</Link>
+            ) : (
+              <Link className="primary-btn" to="/checkout">Proceed to checkout</Link>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function CheckoutPage({ auth, cart, total, onCheckout }) {
+  const navigate = useNavigate()
+  const [form, setForm] = useState({ orderType: 'pickup', deliveryAddress: '', notes: '' })
+  const [error, setError] = useState('')
+
+  if (!auth) return <Navigate to="/login" replace />
+  if (cart.length === 0) return <Navigate to="/products" replace />
+
+  const submitCheckout = async (event) => {
+    event.preventDefault()
+    setError('')
+
+    try {
+      await onCheckout(form)
+      navigate('/products')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  return (
+    <div className="panel">
+      <div className="section-header">
+        <div>
+          <span className="eyebrow">Checkout</span>
+          <h2>Confirm your order</h2>
+        </div>
+      </div>
+
+      <form className="checkout-form" onSubmit={submitCheckout}>
+        <label>
+          Order type
+          <select value={form.orderType} onChange={(event) => setForm({ ...form, orderType: event.target.value })}>
+            <option value="pickup">Store pickup</option>
+            <option value="delivery">Home delivery</option>
+          </select>
+        </label>
+
+        {form.orderType === 'delivery' && (
+          <label>
+            Delivery address
+            <textarea
+              value={form.deliveryAddress}
+              onChange={(event) => setForm({ ...form, deliveryAddress: event.target.value })}
+              placeholder="House number, street, city"
+            />
+          </label>
+        )}
+
+        <label>
+          Notes
+          <textarea
+            value={form.notes}
+            onChange={(event) => setForm({ ...form, notes: event.target.value })}
+            placeholder="Any special instructions"
+          />
+        </label>
+
+        <div className="summary-box">
+          <div>
+            <span>Items</span>
+            <strong>{cart.length}</strong>
+          </div>
+          <div>
+            <span>Total</span>
+            <strong>₹{total}</strong>
+          </div>
+        </div>
+
+        {error && <div className="error-box">{error}</div>}
+        <button type="submit" className="primary-btn full-width">Place order</button>
+      </form>
+    </div>
+  )
+}
+
+function AdminPage({ auth, products, onCreateProduct, onDeleteProduct, onReload }) {
+  const navigate = useNavigate()
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    category: 'Vegetables',
+    price: 100,
+    stock: 10,
+    imageUrl: '',
+    isActive: true,
+  })
+  const [error, setError] = useState('')
+
+  if (!auth || auth.user.role !== 'admin') {
+    return <Navigate to="/login" replace />
+  }
+
+  const submitProduct = async (event) => {
+    event.preventDefault()
+    setError('')
+
+    try {
+      await onCreateProduct(form)
+      setForm({ name: '', description: '', category: 'Vegetables', price: 100, stock: 10, imageUrl: '', isActive: true })
+      onReload()
+      navigate('/products')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  return (
+    <div className="panel">
+      <div className="section-header">
+        <div>
+          <span className="eyebrow">Admin</span>
+          <h2>Inventory management</h2>
+        </div>
+      </div>
+
+      <form onSubmit={submitProduct} className="form-grid admin-form">
+        <label>
+          Product name
+          <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+        </label>
+        <label>
+          Category
+          <select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
+            <option value="Vegetables">Vegetables</option>
+            <option value="Fruits">Fruits</option>
+            <option value="Dairy">Dairy</option>
+            <option value="Bakery">Bakery</option>
+            <option value="Grains">Grains</option>
+            <option value="Household">Household</option>
+          </select>
+        </label>
+        <label>
+          Price
+          <input
+            type="number"
+            value={form.price}
+            onChange={(event) => setForm({ ...form, price: Number(event.target.value) })}
+          />
+        </label>
+        <label>
+          Stock
+          <input
+            type="number"
+            value={form.stock}
+            onChange={(event) => setForm({ ...form, stock: Number(event.target.value) })}
+          />
+        </label>
+        <label className="full-span">
+          Description
+          <textarea
+            value={form.description}
+            onChange={(event) => setForm({ ...form, description: event.target.value })}
+          />
+        </label>
+        {error && <div className="error-box">{error}</div>}
+        <button type="submit" className="primary-btn full-width">Add product</button>
+      </form>
+
+      <div className="product-grid admin-grid">
+        {products.map((product) => (
+          <article key={product._id} className="product-card small-card">
+            <h3>{product.name}</h3>
+            <p>{product.category}</p>
+            <div className="price-row">
+              <strong>₹{product.price}</strong>
+              <span>{product.stock} left</span>
+            </div>
+            <button type="button" className="ghost-btn" onClick={() => onDeleteProduct(product._id)}>
+              Delete
+            </button>
+          </article>
+        ))}
+      </div>
+    </div>
   )
 }
 

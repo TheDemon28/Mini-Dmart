@@ -27,6 +27,9 @@ app.use("/api/auth", require(path.join(__dirname, "routes", "auth")));
 // Product routes
 app.use("/api/products", require(path.join(__dirname, "routes", "product")));
 
+// Order routes
+app.use("/api/orders", require(path.join(__dirname, "routes", "order")));
+
 // 404 handler for API
 app.use((req, res, next) => {
   if (req.path.startsWith("/api/")) {
