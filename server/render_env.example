@@ -1,0 +1,24 @@
+# Render environment variables for Mini-Dmart
+# Copy values into the Render service Environment settings. Replace placeholders with your real values.
+
+# Required
+# MONGO_URI: MongoDB connection string (Atlas recommended). Example: mongodb+srv://<user>:<pass>@cluster0.mongodb.net/mini-dmart?retryWrites=true&w=majority
+# JWT_SECRET: Strong random string for signing JWTs
+# JWT_EXPIRES_IN: Token expiry (e.g. 7d)
+# ADMIN_EMAIL / ADMIN_PASSWORD: initial admin credentials used by seedAdmin.js (change in production)
+# CLIENT_URL: frontend origin (Vercel URL)
+# NODE_ENV: set to production
+
+MONGO_URI=your_mongo_connection_string_here
+JWT_SECRET=replace_with_a_strong_random_secret
+JWT_EXPIRES_IN=7d
+ADMIN_EMAIL=admin@minidmart.com
+ADMIN_PASSWORD=Admin@123
+CLIENT_URL=https://your-frontend-url.vercel.app
+NODE_ENV=production
+
+# Optional email/SMS provider settings (for notifications)
+# SMTP_HOST=
+# SMTP_PORT=
+# SMTP_USER=
+# SMTP_PASS=
