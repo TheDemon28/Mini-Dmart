@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: mini-dmart-backend
+    env: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: ADMIN_EMAIL
+        value: admin@minidmart.com
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CLIENT_URL
+        sync: false
