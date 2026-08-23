@@ -116,6 +116,8 @@ const demoProducts = [
   { _id: 'p72', name: 'Baby Corn', description: 'Tender baby corn for stir-fries and salads', category: 'Vegetables', price: 88, stock: 20, imageUrl: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=900&q=80' },
 ]
 
+const cleanedDemoProducts = dedupeProductsByImage(demoProducts)
+
 const mergeProducts = (...lists) => {
   const map = new Map()
 
@@ -157,7 +159,6 @@ function App() {
   const [auth, setAuth] = useState(getStoredAuth)
   const [cart, setCart] = useState(getStoredCart)
   // cleaned demo list: normalized, deduplicated, and without blank images
-  const cleanedDemoProducts = dedupeProductsByImage(demoProducts)
   const [products, setProducts] = useState(() => cleanedDemoProducts)
   const [orders, setOrders] = useState([])
   const [returnRequests, setReturnRequests] = useState([])
@@ -194,7 +195,7 @@ function App() {
       const response = await fetch(`${API_BASE}/products`)
       const payload = await response.json()
 
-      const fallbackProducts = normalizeProductList(demoProducts)
+          const fallbackProducts = cleanedDemoProducts
 
       if (payload?.success && Array.isArray(payload.data?.items)) {
         setProducts(normalizeProductList(mergeProducts(fallbackProducts, payload.data.items)))
@@ -588,7 +589,7 @@ function HomePage() {
     { name: 'Bakery', icon: '🥖', count: '6 items' },
   ]
 
-  const bestSellerProducts = normalizeProductList(demoProducts).slice(0, 4)
+  const bestSellerProducts = cleanedDemoProducts.slice(0, 4)
 
   return (
     <>
