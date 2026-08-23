@@ -1,113 +1,194 @@
-Mini D-Mart — Grocery Store Application
+# 🛒 Mini D-Mart — Full-Stack E-Commerce Application
 
-Objective
-Build a full-fledged Mini D-Mart / Grocery Store application that allows customers to purchase products, schedule store pickup or home delivery,
-and manage returns/exchanges. Treat it as a real-world product rather than a basic CRUD assignment.
-Important: Implementation details are intentionally open. You decide the architecture, database design, UI/UX, APIs, workflows and business rules.
-Use the open areas to demonstrate creative thinking and problem solving.
-Core Application Requirements
-User Management Registration & Login • Profile • Multiple Roles • RBAC • Protected APIs & Routes
-Product Management Categories • Products • Product Details • Search/Filter • Pricing • Inventory/Stock
-Shopping Cart • Quantity Management • Checkout • Order Calculation • Stock Validation
-Order Management Order Creation • History • Details • Status/Lifecycle • Cancellation • Store Pickup • Scheduled Pickup • Home
+A feature-rich, full-stack grocery e-commerce web application built using **React.js**, **Node.js/Express**, and **MongoDB Atlas**. Designed to provide a seamless shopping experience for customers while offering comprehensive administrative and order processing controls for store operations.
 
-Delivery
+---
 
-Return & Exchange Return Request • Exchange Request • Eligibility • Approval/Rejection • Status • Inventory Handling
-Store Operations Staff Dashboard • Order Preparation • Upcoming Pickup Orders • Delivery Orders • Inventory • Return/Exchange
+## 🔗 Live Demo & Links
 
-Processing
+- **Live Frontend (Vercel):** [https://mini-dmart-orcin.vercel.app](https://mini-dmart-orcin.vercel.app)
+- **Live Backend API (Render):** [https://mini-dmart-backend-6m9p.onrender.com](https://mini-dmart-backend-6m9p.onrender.com)
+- **GitHub Repository:** [https://github.com/TheDemon28/Mini-Dmart](https://github.com/TheDemon28/Mini-Dmart)
 
-Security Authentication • Authorization • RBAC • Input Validation • Secure Password Handling • API Security • Access
+## 🔐 Demo Test Credentials
 
-Control • Secrets/Environment Variables • Audit Logging • Security Review
+| Role | Email | Password | Access Level |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@minidmart.com` | `Admin@123` | Full System Access, Product CRUD, Order & Return Management |
+| **Staff** | `staff@minidmart.com` | `Staff@123` | Order Fulfillment, Inventory Status, Return Processing |
+| **Customer** | `customer@minidmart.com` | `Customer@123` | Store Shopping, Cart, Checkout, Order History, Return Requests |
 
-Product Design Clean UI/UX • Responsive Design • Customer Dashboard • Staff/Manager Dashboard • Admin Dashboard •
+*Note: New customer accounts can also be created freely via the Registration page.*
 
-Loading/Empty/Error States
+---
 
-Testing & Debugging Functional Testing • Edge Cases • Business Logic Validation • Error Handling • Debugging • Security Testing
-Database & Backend Database Design • Relationships • APIs • Business Logic • Validation • Error Handling
-Deployment Deploy using any free deployment/hosting service of your choice. Examples may include Vercel, Netlify,
-Render, Railway, Cloudflare Pages, or another suitable free platform. Provide a working public URL.
-Documentation Project Overview • Architecture • Database Design • API Documentation • RBAC/Permissions • Business Logic •
+## ✨ Key Features
 
-Setup • Environment Variables • Deployment • Testing • Security Findings • Known Limitations
+### 👤 User & Role-Based Access Control (RBAC)
+- **JWT Authentication**: Secure login, registration, and session management.
+- **RBAC Security**: Enforced route protection for Customer, Staff, and Admin roles on both frontend and API backend.
 
-Submission Requirements
-• 1. GitHub Repository: Complete source code with proper project structure.
-• 2. Live Application: Publicly accessible hosted application using any suitable free deployment/hosting service.
-• 3. Explanation Video: 5–10 minutes covering application flow, major features, architecture, database/design decisions, RBAC, security considerations
-and interesting/creative features.
-• 4. Documentation: At minimum README.md, SECURITY.md and .env.example.
-• 5. Test Credentials: Provide credentials for the roles implemented.
-• 6. AI Usage: AI tools are allowed. Mention the tools used and briefly
+### 🛍️ Product Catalog & Search
+- **Category Filtering**: Browse products by category (Fruits, Vegetables, Dairy, Bakery, Grains, Beverages, Household).
+- **Live Search & Price Filtering**: Instant client-side and server-side filtering.
+- **Inventory Stock Badges**: Real-time stock availability indicators.
 
+### 🛒 Cart & Flexible Checkout
+- **Cart Management**: Quantity increment/decrement, dynamic total calculations, and item removal.
+- **Fulfillment Modes**:
+  - **Home Delivery**: Delivery address collection and scheduling.
+  - **Store Pickup**: Direct in-store pickup point selection.
+  - **Scheduled Pickup**: Custom time-slot allocation.
 
-Deployment (Vercel frontend + Render backend)
-This project is ready to deploy with the frontend hosted on Vercel (recommended) and the backend on Render. The steps below prepare the repository and list the environment variables the services need.
+### 📦 Order & Returns Lifecycle
+- **Customer Order Tracking**: Real-time status updates (Pending, Processing, Completed, Cancelled).
+- **Return & Exchange Request System**: Customers can submit return/exchange requests for delivered items.
+- **Staff Operations Dashboard**: Staff and Admins can update order states and process returns.
 
-A. Backend (Render)
-1. Prepare server settings
-   - Root: /server (select the server folder when creating the Render service)
-   - Build command: (none required for Node) or leave blank
-   - Start command: npm run start (ensure package.json has a start script that runs node index.js or nodemon/configured script)
-   - Environment: set NODE_ENV=production and PORT (Render sets a port automatically as $PORT)
+---
 
-2. Environment variables (set these in the Render dashboard as secrets)
-   - MONGO_URI: mongodb+srv://... (Atlas) or your managed MongoDB URI
-   - JWT_SECRET: a strong random secret
-   - JWT_EXPIRES_IN: 7d
-   - ADMIN_EMAIL: admin@minidmart.com
-   - ADMIN_PASSWORD: Admin@123 (change this for production)
-   - CLIENT_URL: https://your-frontend.vercel.app
-   - (Optional) SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS for emails
+## 🛠️ Technology Stack
 
-3. Database
-   - Create a MongoDB Atlas cluster (free tier) and copy the connection string into MONGO_URI.
-   - Whitelist Render's IPs or configure access via MongoDB's network settings.
+| Layer | Technologies Used |
+| :--- | :--- |
+| **Frontend** | React.js (Vite), JavaScript (ES6+), Modern Vanilla CSS3, React Router DOM |
+| **Backend** | Node.js, Express.js, REST APIs |
+| **Database** | MongoDB Atlas (Cloud), Mongoose ORM |
+| **Security & Auth** | JSON Web Tokens (JWT), bcryptjs Password Hashing, CORS |
+| **Deployment** | Vercel (Frontend), Render (Backend), MongoDB Atlas (DB) |
+| **Development Tools** | VS Code, Git, GitHub, Postman |
 
-4. Seeding (optional)
-   - After the service is running and MONGO_URI is set, run the seed scripts locally or via a one-off Render shell:
-       node server/seedAdmin.js
-       node server/seedProducts.js
-   - These create the admin user and demo product set.
+---
 
-B. Frontend (Vercel)
-1. Add a new project in Vercel and connect your GitHub repository.
-2. When configuring the project, set Root Directory to /client.
-3. Build command: npm run build
-4. Output Directory: dist
-5. Environment variables (if any; usually not required for a static frontend):
-   - VITE_API_URL: https://your-backend.onrender.com/api (set this so the frontend talks to the deployed backend)
+## 📁 Project Architecture
 
-C. Build & deploy
-1. Push the repository to GitHub.
-2. Set up Render service and Vercel project as above.
-3. After both are deployed, verify the following:
-   - Frontend URL (Vercel) loads and lists products from backend
-   - Login works (use seeded admin/customer credentials or register a new account)
-   - Checkout and orders work end-to-end
+```text
+Mini-Dmart/
+├── client/                     # React Frontend Application
+│   ├── src/
+│   │   ├── components/        # Reusable UI Components
+│   │   ├── pages/             # App Pages (Shop, Cart, Orders, Admin, etc.)
+│   │   ├── App.jsx            # Main Router & Global App State
+│   │   └── App.css            # Custom Styling System
+│   └── package.json
+│
+├── server/                     # Node.js Express Backend API
+│   ├── controllers/           # Auth, Product, Order & Return Logic
+│   ├── middleware/            # JWT Auth & Role Authorization Middleware
+│   ├── models/                # Mongoose Database Schemas (User, Product, Order, Return)
+│   ├── routes/                # API Route Definitions (/api/auth, /api/products, etc.)
+│   ├── seedAdmin.js           # Admin User Seed Script
+│   ├── seedProducts.js        # Product Catalog Seed Script
+│   ├── server.js              # Server Entry Point & MongoDB Connection
+│   └── package.json
+│
+├── render.yaml                # Render Infrastructure Blueprint
+├── DEPLOY_CHECKLIST.md        # Deployment Guide & Checklist
+└── README.md                  # Project Documentation
+```
 
-D. Helpful commands and notes
-- Local dev frontend: cd client && npm install && npm run dev
-- Local prod preview frontend: cd client && npm run build && npm run preview
-- Local backend: cd server && npm install && npm run start
-- Seed data: node server/seedAdmin.js and node server/seedProducts.js
+---
 
-E. Environment variables reference (summary)
-- PORT (optional)
-- MONGO_URI
-- JWT_SECRET
-- JWT_EXPIRES_IN
-- ADMIN_EMAIL
-- ADMIN_PASSWORD
-- CLIENT_URL
-- Optional: SMTP_* for email
+## 🚀 REST API Endpoints Overview
 
-If you want, I can now:
-- Add a short "Deploy to Render & Vercel" checklist to the README with exact UI steps and screenshots (or command-line steps if you prefer).
-- Create GitHub Actions to automate deployment (advanced).
-- Generate a rendered .env.production example and provide copy-paste-ready Render environment entries.
+### Auth Routes (`/api/auth`)
+- `POST /api/auth/register` — Register a new customer account
+- `POST /api/auth/login` — Login user & return JWT token
+- `GET /api/auth/profile` — Get current logged-in user profile *(Protected)*
 
-Which of these should I do next? (I can add the checklist and a ready-to-copy env list.)
+### Product Routes (`/api/products`)
+- `GET /api/products` — Fetch all products (supports category & search query)
+- `GET /api/products/:id` — Fetch single product details
+- `POST /api/products` — Create new product *(Admin/Staff only)*
+- `PUT /api/products/:id` — Update product details *(Admin/Staff only)*
+- `DELETE /api/products/:id` — Delete product *(Admin/Staff only)*
+
+### Order Routes (`/api/orders`)
+- `POST /api/orders` — Create a new order *(Authenticated)*
+- `GET /api/orders/my-orders` — Get logged-in user's order history *(Authenticated)*
+- `GET /api/orders` — Fetch all orders *(Admin/Staff only)*
+- `PUT /api/orders/:id/status` — Update order status *(Admin/Staff only)*
+
+### Return Routes (`/api/returns`)
+- `POST /api/returns` — Submit a return/exchange request *(Authenticated)*
+- `GET /api/returns` — List return requests *(Admin/Staff view all, Customer views own)*
+- `PUT /api/returns/:id` — Approve or reject return request *(Admin/Staff only)*
+
+---
+
+## 💻 Local Setup & Running
+
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- MongoDB instance (local or MongoDB Atlas cluster URI)
+
+### 1. Clone Repository
+```bash
+git clone https://github.com/TheDemon28/Mini-Dmart.git
+cd Mini-Dmart
+```
+
+### 2. Backend Setup
+```bash
+cd server
+npm install
+
+# Create a .env file inside /server
+cat <<EOT > .env
+PORT=5001
+MONGO_URI=mongodb://localhost:27017/mini-dmart
+JWT_SECRET=your_super_secret_jwt_key
+JWT_EXPIRES_IN=7d
+ADMIN_EMAIL=admin@minidmart.com
+ADMIN_PASSWORD=Admin@123
+CLIENT_URL=http://localhost:5173
+EOT
+
+# Seed database with initial Admin and Products
+npm run seed:admin
+npm run seed:products
+
+# Start development server
+npm run dev
+```
+
+### 3. Frontend Setup
+```bash
+# Open a new terminal tab
+cd client
+npm install
+
+# Start development server
+npm run dev
+```
+Open your browser at `http://localhost:5173`.
+
+---
+
+## ☁️ Deployment Guide
+
+### Deploying Backend to Render
+1. Create a new **Web Service** on [Render](https://render.com).
+2. Connect your repository and set **Root Directory** to `server`.
+3. Set **Build Command** to `npm install` and **Start Command** to `npm start`.
+4. Configure Environment Variables on Render: `MONGO_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CLIENT_URL`, `NODE_ENV=production`.
+
+### Deploying Frontend to Vercel
+1. Import repository to [Vercel](https://vercel.com).
+2. Set **Root Directory** to `client`.
+3. Set Environment Variable: `VITE_API_URL` = `https://<your-render-backend-url>.onrender.com/api`.
+4. Deploy!
+
+---
+
+## 🤖 AI Usage Disclosure
+
+In compliance with submission guidelines:
+- **Antigravity AI** was utilized as an AI pair-programming assistant during the development of this project.
+- Key areas where AI was used: architectural planning, REST API endpoint boilerplate generation, debugging MongoDB schema indices and CORS options, creating deployment configurations (`render.yaml`), and refining technical documentation.
+
+---
+
+## 📄 License & Attribution
+
+Developed for Mini D-Mart evaluation. All code licensed under the [MIT License](LICENSE).
