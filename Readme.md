@@ -186,9 +186,3 @@ Open your browser at `http://localhost:5173`.
 In compliance with submission guidelines:
 - **Antigravity AI** was utilized as an AI pair-programming assistant during the development of this project.
 - Key areas where AI was used: architectural planning, REST API endpoint boilerplate generation, debugging MongoDB schema indices and CORS options, creating deployment configurations (`render.yaml`), and refining technical documentation.
-
----
-
-## 📄 License & Attribution
-
-Developed for Mini D-Mart evaluation. All code licensed under the [MIT License](LICENSE).
