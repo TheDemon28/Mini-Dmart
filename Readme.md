@@ -1,9 +1,5 @@
 Mini D-Mart — Grocery Store Application
 
-Released: Friday, 21 August 2026 — After 7:00 PM Deadline: Sunday, 23 August 2026 — 5:00 PM Expected Effort: 10–12 hrs
-
-development + 4–5 hrs documentation/testing
-
 Objective
 Build a full-fledged Mini D-Mart / Grocery Store application that allows customers to purchase products, schedule store pickup or home delivery,
 and manage returns/exchanges. Treat it as a real-world product rather than a basic CRUD assignment.
@@ -45,15 +41,4 @@ Submission Requirements
 and interesting/creative features.
 • 4. Documentation: At minimum README.md, SECURITY.md and .env.example.
 • 5. Test Credentials: Provide credentials for the roles implemented.
-• 6. AI Usage: AI tools are allowed. Mention the tools used and briefly explain how they were used.
-What We Are Evaluating
-Area Weight
-Core functionality 20%
-Creative thinking & problem solving 15%
-Backend / API 10%
-Database design 10%
-Frontend / UI/UX 10%
-Authentication & RBAC 15%
-Security awareness 10%
-Testing & debugging 5%
-Documentation & deployment 5%
+• 6. AI Usage: AI tools are allowed. Mention the tools used and briefly 
