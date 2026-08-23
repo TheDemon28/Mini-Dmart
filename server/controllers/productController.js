@@ -8,6 +8,15 @@ const memoryProducts = global.__miniDmartProducts || (global.__miniDmartProducts
   { _id: "p4", name: "Brown Rice", description: "Healthy grain staple", category: "Grains", price: 110, stock: 25, imageUrl: "", isActive: true },
   { _id: "p5", name: "Tomatoes", description: "Fresh kitchen staple", category: "Vegetables", price: 80, stock: 35, imageUrl: "", isActive: true },
   { _id: "p6", name: "Bread", description: "Soft whole wheat loaf", category: "Bakery", price: 55, stock: 22, imageUrl: "", isActive: true },
+  { _id: "p7", name: "Onions", description: "Fresh red onions for daily cooking", category: "Vegetables", price: 40, stock: 60, imageUrl: "", isActive: true },
+  { _id: "p8", name: "Paneer", description: "Soft protein-rich cottage cheese", category: "Dairy", price: 90, stock: 28, imageUrl: "", isActive: true },
+  { _id: "p9", name: "Basmati Rice", description: "Premium aromatic long-grain rice", category: "Grains", price: 180, stock: 18, imageUrl: "", isActive: true },
+  { _id: "p10", name: "Eggs", description: "Farm fresh eggs, 12 count", category: "Dairy", price: 90, stock: 42, imageUrl: "", isActive: true },
+  { _id: "p11", name: "Butter", description: "Creamy spread for breakfast and baking", category: "Dairy", price: 120, stock: 24, imageUrl: "", isActive: true },
+  { _id: "p12", name: "Tea", description: "Classic Indian tea leaves", category: "Beverages", price: 95, stock: 50, imageUrl: "", isActive: true },
+  { _id: "p13", name: "Coffee", description: "Rich aroma coffee blend", category: "Beverages", price: 150, stock: 32, imageUrl: "", isActive: true },
+  { _id: "p14", name: "Dishwash Bar", description: "Effective kitchen cleaning soap", category: "Household", price: 35, stock: 70, imageUrl: "", isActive: true },
+  { _id: "p15", name: "Toothpaste", description: "Fresh mint flavor oral care", category: "Household", price: 75, stock: 54, imageUrl: "", isActive: true },
 ]);
 
 const getProductsFromStore = () => memoryProducts.filter((product) => product.isActive !== false);

@@ -5,12 +5,28 @@ import './App.css'
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
 
 const demoProducts = [
-  { _id: 'p1', name: 'Fresh Apples', description: 'Crisp and juicy red apples', category: 'Fruits', price: 120, stock: 40 },
-  { _id: 'p2', name: 'Bananas', description: 'Naturally sweet and healthy', category: 'Fruits', price: 60, stock: 50 },
-  { _id: 'p3', name: 'Milk 1L', description: 'Farm fresh whole milk', category: 'Dairy', price: 70, stock: 30 },
-  { _id: 'p4', name: 'Brown Rice', description: 'Healthy grain staple', category: 'Grains', price: 110, stock: 25 },
-  { _id: 'p5', name: 'Tomatoes', description: 'Fresh kitchen staple', category: 'Vegetables', price: 80, stock: 35 },
-  { _id: 'p6', name: 'Bread', description: 'Soft whole wheat loaf', category: 'Bakery', price: 55, stock: 22 },
+  { _id: 'p1', name: 'Fresh Apples', description: 'Crisp and juicy red apples', category: 'Fruits', price: 120, stock: 40, imageUrl: 'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p2', name: 'Bananas', description: 'Naturally sweet and healthy', category: 'Fruits', price: 60, stock: 50, imageUrl: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p3', name: 'Milk 1L', description: 'Farm fresh whole milk', category: 'Dairy', price: 70, stock: 30, imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p4', name: 'Brown Rice', description: 'Healthy grain staple', category: 'Grains', price: 110, stock: 25, imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001c8d6?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p5', name: 'Tomatoes', description: 'Fresh kitchen staple', category: 'Vegetables', price: 80, stock: 35, imageUrl: 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p6', name: 'Bread', description: 'Soft whole wheat loaf', category: 'Bakery', price: 55, stock: 22, imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p7', name: 'Onions', description: 'Fresh red onions for daily cooking', category: 'Vegetables', price: 40, stock: 60, imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p8', name: 'Paneer', description: 'Soft protein-rich cottage cheese', category: 'Dairy', price: 90, stock: 28, imageUrl: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p9', name: 'Basmati Rice', description: 'Premium aromatic long-grain rice', category: 'Grains', price: 180, stock: 18, imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001c8d6?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p10', name: 'Eggs', description: 'Farm fresh eggs, 12 count', category: 'Dairy', price: 90, stock: 42, imageUrl: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p11', name: 'Butter', description: 'Creamy spread for breakfast and baking', category: 'Dairy', price: 120, stock: 24, imageUrl: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p12', name: 'Tea', description: 'Classic Indian tea leaves', category: 'Beverages', price: 95, stock: 50, imageUrl: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p13', name: 'Coffee', description: 'Rich aroma coffee blend', category: 'Beverages', price: 150, stock: 32, imageUrl: 'https://images.unsplash.com/photo-1498804103079-a4f1d8dfe2d6?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p14', name: 'Dishwash Bar', description: 'Effective kitchen cleaning soap', category: 'Household', price: 35, stock: 70, imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p15', name: 'Toothpaste', description: 'Fresh mint flavor oral care', category: 'Household', price: 75, stock: 54, imageUrl: 'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p16', name: 'Red Bell Pepper', description: 'Sweet and crunchy for salads and stir-fries', category: 'Vegetables', price: 95, stock: 28, imageUrl: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p17', name: 'Strawberries', description: 'Sweet red berries packed with vitamin C', category: 'Fruits', price: 180, stock: 20, imageUrl: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p18', name: 'Greek Yogurt', description: 'Creamy and protein-rich yogurt cups', category: 'Dairy', price: 110, stock: 26, imageUrl: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p19', name: 'Cucumber', description: 'Fresh garden cucumber, hydrating and crisp', category: 'Vegetables', price: 50, stock: 48, imageUrl: 'https://images.unsplash.com/photo-1449300079323-02e209d1a3f6?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p20', name: 'Cheese Slice', description: 'Everyday cheddar slices for sandwiches', category: 'Dairy', price: 130, stock: 18, imageUrl: 'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p21', name: 'Oats', description: 'Healthy breakfast oats for porridge and baking', category: 'Grains', price: 90, stock: 56, imageUrl: 'https://images.unsplash.com/photo-1517673400267-3bc8c4d60f0b?auto=format&fit=crop&w=900&q=80' },
+  { _id: 'p22', name: 'Sweet Corn', description: 'Fresh golden corn kernels for quick meals', category: 'Vegetables', price: 72, stock: 44, imageUrl: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=900&q=80' },
 ]
 
 function getStoredAuth() {
@@ -319,14 +335,16 @@ function App() {
       <div className="app-shell">
         <header className="topbar">
           <div className="brand-group">
-            <div className="text-logo">
-              <span className="logo-mark">●</span>
-              <span className="brand-name">miniDmart</span>
-            </div>
+            <Link to="/" className="brand-link">
+              <div className="text-logo">
+                <span className="logo-mark">●</span>
+                <span className="brand-name">miniDmart</span>
+              </div>
+            </Link>
           </div>
 
           <nav className="nav">
-            <Link to="/products" className="nav-link">Shop</Link>
+            <Link to="/shop" className="nav-link">Shop</Link>
             <Link to={auth ? '/returns' : '/login'} className="nav-link">My orders</Link>
             {(auth?.user?.role === 'admin' || auth?.user?.role === 'staff') && (
               <Link to="/admin" className="nav-link">Dashboard</Link>
@@ -359,7 +377,7 @@ function App() {
 
         <main className="page-shell">
           <Routes>
-            <Route path="/" element={<HomePage onOpenLogin={() => setShowAuthModal(true)} />} />
+            <Route path="/" element={<HomePage />} />
             <Route
               path="/login"
               element={<LoginPage auth={auth} onLogin={handleLogin} />}
@@ -367,6 +385,17 @@ function App() {
             <Route
               path="/register"
               element={<RegisterPage auth={auth} onRegister={handleRegister} />}
+            />
+            <Route
+              path="/shop"
+              element={
+                <ProductsPage
+                  products={products}
+                  loading={loading}
+                  onAddToCart={addToCart}
+                  onReload={loadProducts}
+                />
+              }
             />
             <Route
               path="/products"
@@ -430,43 +459,69 @@ function App() {
   )
 }
 
-function HomePage({ onOpenLogin }) {
+function HomePage() {
   return (
-    <div className="hero-panel">
-      <div className="hero-copy">
-        <span className="eyebrow">Freshness, on your schedule</span>
-        <h1>Groceries that fit your day.</h1>
-        <p>Pick up when it suits you or get essentials delivered to your door.</p>
-        <div className="cta-row">
-          <button type="button" className="primary-btn" onClick={onOpenLogin}>
-            Browse groceries
-          </button>
+    <>
+      <div className="hero-panel">
+        <div className="hero-copy">
+          <span className="eyebrow">Freshness, on your schedule</span>
+          <h1>Groceries that fit your day.</h1>
+          <p>Pick up when it suits you or get essentials delivered to your door.</p>
+          <div className="cta-row">
+            <Link to="/shop" className="primary-btn">
+              Browse groceries
+            </Link>
+          </div>
+        </div>
+
+        <div className="hero-art" aria-hidden="true">
+          <div className="carrot">
+            <span className="leaf leaf-a" />
+            <span className="leaf leaf-b" />
+            <span className="leaf leaf-c" />
+          </div>
+        </div>
+
+        <div className="hero-stats">
+          <div>
+            <strong>30 min</strong>
+            <span>pickup slots</span>
+          </div>
+          <div>
+            <strong>Live</strong>
+            <span>stock checks</span>
+          </div>
+          <div>
+            <strong>Easy</strong>
+            <span>returns & exchanges</span>
+          </div>
         </div>
       </div>
 
-      <div className="hero-art" aria-hidden="true">
-        <div className="carrot">
-          <span className="leaf leaf-a" />
-          <span className="leaf leaf-b" />
-          <span className="leaf leaf-c" />
-        </div>
-      </div>
-
-      <div className="hero-stats">
-        <div>
-          <strong>30 min</strong>
-          <span>pickup slots</span>
-        </div>
-        <div>
-          <strong>Live</strong>
-          <span>stock checks</span>
-        </div>
-        <div>
-          <strong>Easy</strong>
-          <span>returns & exchanges</span>
-        </div>
-      </div>
-    </div>
+      <section className="feature-strip">
+        <article className="feature-card">
+          <span className="feature-icon">🥬</span>
+          <div>
+            <h3>Fresh produce</h3>
+            <p>Daily-picked fruits and vegetables for home cooking.</p>
+          </div>
+        </article>
+        <article className="feature-card">
+          <span className="feature-icon">🚚</span>
+          <div>
+            <h3>Fast delivery</h3>
+            <p>Quick doorstep dispatch across your neighborhood.</p>
+          </div>
+        </article>
+        <article className="feature-card">
+          <span className="feature-icon">📦</span>
+          <div>
+            <h3>Easy returns</h3>
+            <p>Simple exchange and return requests for every order.</p>
+          </div>
+        </article>
+      </section>
+    </>
   )
 }
 
@@ -544,7 +599,7 @@ function LoginPage({ auth, onLogin }) {
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  if (auth) return <Navigate to="/products" replace />
+  if (auth) return <Navigate to="/shop" replace />
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -552,7 +607,7 @@ function LoginPage({ auth, onLogin }) {
 
     try {
       await onLogin(form)
-      navigate('/products')
+      navigate('/shop')
     } catch (err) {
       setError(err.message)
     }
@@ -590,7 +645,7 @@ function RegisterPage({ auth, onRegister }) {
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  if (auth) return <Navigate to="/products" replace />
+  if (auth) return <Navigate to="/shop" replace />
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -598,7 +653,7 @@ function RegisterPage({ auth, onRegister }) {
 
     try {
       await onRegister(form)
-      navigate('/products')
+      navigate('/shop')
     } catch (err) {
       setError(err.message)
     }
@@ -708,7 +763,7 @@ function CartPage({ cart, total, onUpdateQuantity, onRemove, auth }) {
       {cart.length === 0 ? (
         <div className="empty-state">
           <p>Your cart is empty.</p>
-          <Link className="primary-btn" to="/products">Continue shopping</Link>
+        <Link className="primary-btn" to="/shop">Continue shopping</Link>
         </div>
       ) : (
         <>
@@ -755,7 +810,7 @@ function CheckoutPage({ auth, cart, total, onCheckout }) {
   const [error, setError] = useState('')
 
   if (!auth) return <Navigate to="/login" replace />
-  if (cart.length === 0) return <Navigate to="/products" replace />
+  if (cart.length === 0) return <Navigate to="/shop" replace />
 
   const submitCheckout = async (event) => {
     event.preventDefault()
@@ -763,7 +818,7 @@ function CheckoutPage({ auth, cart, total, onCheckout }) {
 
     try {
       await onCheckout(form)
-      navigate('/products')
+      navigate('/shop')
     } catch (err) {
       setError(err.message)
     }
@@ -839,7 +894,7 @@ function ReturnsPage({ auth, orders, returnRequests, onCreateReturnRequest }) {
     try {
       await onCreateReturnRequest(form)
       setForm({ orderId: '', requestedType: 'return', itemName: '', reason: '' })
-      navigate('/products')
+      navigate('/shop')
     } catch (err) {
       setError(err.message)
     }
@@ -932,7 +987,7 @@ function AdminPage({ auth, products, orders, returnRequests, onCreateProduct, on
       await onCreateProduct(form)
       setForm({ name: '', description: '', category: 'Vegetables', price: 100, stock: 10, imageUrl: '', isActive: true })
       onReload()
-      navigate('/products')
+      navigate('/shop')
     } catch (err) {
       setError(err.message)
     }
@@ -940,10 +995,13 @@ function AdminPage({ auth, products, orders, returnRequests, onCreateProduct, on
 
   const orderStatuses = ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'out_for_delivery', 'delivered']
   const returnStatuses = ['pending', 'approved', 'rejected', 'processing', 'completed']
+  const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total || 0), 0)
+  const pendingOrders = orders.filter((order) => order.status !== 'delivered').length
+  const lowStockItems = products.filter((product) => Number(product.stock || 0) < 10).length
 
   return (
-    <div className="panel">
-      <div className="section-header">
+    <div className="panel dashboard-panel">
+      <div className="section-header dashboard-header">
         <div>
           <span className="eyebrow">Operations</span>
           <h2>Staff & admin dashboard</h2>
@@ -951,23 +1009,35 @@ function AdminPage({ auth, products, orders, returnRequests, onCreateProduct, on
       </div>
 
       <div className="stats-box dashboard-stats">
-        <div>
+        <div className="dashboard-stat-card">
+          <span className="stat-label">Orders</span>
           <strong>{orders.length}</strong>
-          <span>Total orders</span>
+          <small>{pendingOrders} active</small>
         </div>
-        <div>
+        <div className="dashboard-stat-card">
+          <span className="stat-label">Returns</span>
           <strong>{returnRequests.length}</strong>
-          <span>Return requests</span>
+          <small>{returnRequests.filter((request) => request.status === 'pending').length} pending</small>
         </div>
-        <div>
-          <strong>{products.length}</strong>
-          <span>Products</span>
+        <div className="dashboard-stat-card">
+          <span className="stat-label">Revenue</span>
+          <strong>₹{totalRevenue}</strong>
+          <small>{products.length} products</small>
+        </div>
+        <div className="dashboard-stat-card">
+          <span className="stat-label">Low stock</span>
+          <strong>{lowStockItems}</strong>
+          <small>{lowStockItems === 0 ? 'Healthy' : 'Needs attention'}</small>
         </div>
       </div>
 
       <div className="dashboard-grid">
         <div className="dashboard-section">
-          <h3>Inventory management</h3>
+          <div className="section-title-row">
+            <h3>Inventory management</h3>
+            <span className="pill-badge">{products.length} items</span>
+          </div>
+
           <form onSubmit={submitProduct} className="form-grid admin-form">
             <label>
               Product name
@@ -1014,8 +1084,8 @@ function AdminPage({ auth, products, orders, returnRequests, onCreateProduct, on
           <div className="product-grid admin-grid">
             {products.map((product) => (
               <article key={product._id} className="product-card small-card">
+                <div className="product-tag">{product.category}</div>
                 <h3>{product.name}</h3>
-                <p>{product.category}</p>
                 <div className="price-row">
                   <strong>₹{product.price}</strong>
                   <span>{product.stock} left</span>
@@ -1029,7 +1099,10 @@ function AdminPage({ auth, products, orders, returnRequests, onCreateProduct, on
         </div>
 
         <div className="dashboard-section">
-          <h3>Order lifecycle</h3>
+          <div className="section-title-row">
+            <h3>Order lifecycle</h3>
+            <span className="pill-badge">{orders.length} today</span>
+          </div>
           {orders.length === 0 ? <p>No orders yet.</p> : (
             <div className="stack-list">
               {orders.map((order) => (
@@ -1058,7 +1131,10 @@ function AdminPage({ auth, products, orders, returnRequests, onCreateProduct, on
         </div>
 
         <div className="dashboard-section">
-          <h3>Return & exchange queue</h3>
+          <div className="section-title-row">
+            <h3>Return & exchange queue</h3>
+            <span className="pill-badge">{returnRequests.length} items</span>
+          </div>
           {returnRequests.length === 0 ? <p>No return requests.</p> : (
             <div className="stack-list">
               {returnRequests.map((request) => (
