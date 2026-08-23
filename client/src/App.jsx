@@ -704,14 +704,20 @@ function RegisterPage({ auth, onRegister }) {
 function ProductsPage({ products, loading, onAddToCart, onReload }) {
   const [query, setQuery] = useState('')
 
-  const visibleProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(query.toLowerCase()) ||
-      product.category.toLowerCase().includes(query.toLowerCase()),
-  )
+  const categories = ['All', ...new Set(products.map((product) => product.category))]
+  const [activeCategory, setActiveCategory] = useState('All')
+
+  const visibleProducts = products.filter((product) => {
+    const matchesQuery =
+      product.name.toLowerCase().includes(query.toLowerCase()) ||
+      product.category.toLowerCase().includes(query.toLowerCase())
+    const matchesCategory = activeCategory === 'All' || product.category === activeCategory
+    return matchesQuery && matchesCategory
+  })
 
   return (
     <div className="panel">
-      <div className="section-header">
+      <div className="section-header shop-header">
         <div>
           <span className="eyebrow">Browse</span>
           <h2>Trending groceries</h2>
@@ -726,22 +732,52 @@ function ProductsPage({ products, loading, onAddToCart, onReload }) {
         </div>
       </div>
 
+      <div className="shop-feature-banner">
+        <div>
+          <span className="feature-kicker">Featured picks</span>
+          <h3>Fresh essentials for every kitchen</h3>
+        </div>
+        <button type="button" className="primary-btn small-btn">Shop now</button>
+      </div>
+
+      <div className="category-row">
+        {categories.map((category) => (
+          <button
+            key={category}
+            type="button"
+            className={activeCategory === category ? 'category-pill active' : 'category-pill'}
+            onClick={() => setActiveCategory(category)}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <p>Loading products...</p>
       ) : (
         <div className="product-grid">
           {visibleProducts.map((product) => (
             <article key={product._id} className="product-card">
-              <div className="product-tag">{product.category}</div>
-              <h3>{product.name}</h3>
-              <p>{product.description}</p>
-              <div className="price-row">
-                <strong>₹{product.price}</strong>
-                <span>{product.stock} in stock</span>
+              <div className="product-visual">
+                {product.imageUrl ? (
+                  <img src={product.imageUrl} alt={product.name} className="product-image" />
+                ) : (
+                  <div className="product-image placeholder-image">Fresh</div>
+                )}
               </div>
-              <button type="button" className="primary-btn" onClick={() => onAddToCart(product)}>
-                Add to cart
-              </button>
+              <div className="product-info">
+                <div className="product-tag">{product.category}</div>
+                <h3>{product.name}</h3>
+                <p>{product.description}</p>
+                <div className="price-row">
+                  <strong>₹{product.price}</strong>
+                  <span>{product.stock} in stock</span>
+                </div>
+                <button type="button" className="primary-btn" onClick={() => onAddToCart(product)}>
+                  Add to cart
+                </button>
+              </div>
             </article>
           ))}
         </div>
