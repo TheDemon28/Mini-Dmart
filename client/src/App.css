@@ -398,6 +398,183 @@ img {
   line-height: 1.5;
 }
 
+.promo-banner-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 28px 20px 0;
+}
+
+.promo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(12, 40, 35, 0.06);
+  box-shadow: var(--shadow-soft);
+}
+
+.promo-banner h3 {
+  margin: 8px 0 0;
+  max-width: 320px;
+  font-size: clamp(1.6rem, 2vw, 2.2rem);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+
+.promo-banner-green {
+  background: linear-gradient(135deg, rgba(18, 89, 69, 0.96), rgba(82, 143, 86, 0.9));
+  color: #fff;
+}
+
+.promo-banner-peach {
+  background: linear-gradient(135deg, rgba(244, 217, 182, 0.9), rgba(248, 236, 214, 0.9));
+  color: var(--brand-deep);
+}
+
+.light-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: inherit;
+}
+
+.promo-banner-peach .light-btn {
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--brand-deep);
+  border-color: rgba(20, 44, 36, 0.08);
+}
+
+.home-section {
+  margin: 34px 20px 0;
+}
+
+.category-grid,
+.best-seller-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.category-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(16, 44, 37, 0.06);
+  box-shadow: var(--shadow-soft);
+  color: var(--brand-deep);
+  text-decoration: none;
+  transition: transform 0.18s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-2px);
+}
+
+.category-emoji {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(61, 132, 88, 0.12), rgba(230, 176, 124, 0.2));
+  font-size: 1.8rem;
+}
+
+.category-card strong {
+  display: block;
+  font-size: 1.15rem;
+  color: var(--brand-deep);
+}
+
+.category-card small {
+  color: #586760;
+  font-size: 0.8rem;
+}
+
+.mini-product-card {
+  overflow: hidden;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(16, 44, 37, 0.06);
+  box-shadow: var(--shadow-soft);
+}
+
+.mini-product-image {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.mini-product-body {
+  padding: 16px;
+}
+
+.mini-tag {
+  display: inline-flex;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(132, 185, 145, 0.12);
+  color: #2a775f;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mini-product-body h3 {
+  margin: 12px 0 10px;
+  font-size: 1.45rem;
+  color: var(--brand-deep);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  letter-spacing: -0.06em;
+}
+
+.mini-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mini-meta strong {
+  font-size: 1.25rem;
+  color: var(--brand-deep);
+}
+
+.mini-meta span {
+  color: #53615d;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 980px) {
+  .promo-banner-row,
+  .category-grid,
+  .best-seller-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .promo-banner-row,
+  .category-grid,
+  .best-seller-grid,
+  .feature-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .promo-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 .auth-overlay {
   position: fixed;
   inset: 0;

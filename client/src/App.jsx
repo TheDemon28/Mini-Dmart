@@ -4,6 +4,43 @@ import './App.css'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
 
+const productImageFallbacks = {
+  Fruits: 'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?auto=format&fit=crop&w=900&q=80',
+  Vegetables: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80',
+  Dairy: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=900&q=80',
+  Bakery: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80',
+  Grains: 'https://images.unsplash.com/photo-1586201375761-83865001c8d6?auto=format&fit=crop&w=900&q=80',
+  Beverages: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80',
+  Household: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80',
+}
+
+const normalizeProductImage = (product) => {
+  const rawUrl = typeof product?.imageUrl === 'string' ? product.imageUrl.trim() : ''
+  const resolvedUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : (productImageFallbacks[product?.category] || productImageFallbacks.Fruits)
+
+  return {
+    ...product,
+    imageUrl: resolvedUrl,
+  }
+}
+
+const normalizeProductList = (products = []) => products.map(normalizeProductImage)
+
+// Remove products with blank images and deduplicate by resolved imageUrl
+const dedupeProductsByImage = (products = []) => {
+  const seen = new Set()
+  const out = []
+  for (const p of products) {
+    const np = normalizeProductImage(p)
+    const img = (np.imageUrl || '').trim()
+    if (!img) continue // drop blank images
+    if (seen.has(img)) continue // drop duplicates by image URL
+    seen.add(img)
+    out.push(np)
+  }
+  return out
+}
+
 const demoProducts = [
   { _id: 'p1', name: 'Fresh Apples', description: 'Crisp and juicy red apples', category: 'Fruits', price: 120, stock: 40, imageUrl: 'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?auto=format&fit=crop&w=900&q=80' },
   { _id: 'p2', name: 'Bananas', description: 'Naturally sweet and healthy', category: 'Fruits', price: 60, stock: 50, imageUrl: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=900&q=80' },
@@ -79,6 +116,27 @@ const demoProducts = [
   { _id: 'p72', name: 'Baby Corn', description: 'Tender baby corn for stir-fries and salads', category: 'Vegetables', price: 88, stock: 20, imageUrl: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=900&q=80' },
 ]
 
+const mergeProducts = (...lists) => {
+  const map = new Map()
+
+  lists.flat().forEach((product) => {
+    if (!product || !product.name) return
+
+    const key = product._id || product.name
+    map.set(key, {
+      ...product,
+      _id: product._id || key,
+      name: product.name,
+      category: product.category || 'General',
+      price: Number(product.price) || 0,
+      stock: Number(product.stock) || 0,
+      imageUrl: product.imageUrl || '',
+    })
+  })
+
+  return Array.from(map.values())
+}
+
 function getStoredAuth() {
   try {
     return JSON.parse(localStorage.getItem('miniDmartAuth') || 'null')
@@ -98,7 +156,9 @@ function getStoredCart() {
 function App() {
   const [auth, setAuth] = useState(getStoredAuth)
   const [cart, setCart] = useState(getStoredCart)
-  const [products, setProducts] = useState(demoProducts)
+  // cleaned demo list: normalized, deduplicated, and without blank images
+  const cleanedDemoProducts = dedupeProductsByImage(demoProducts)
+  const [products, setProducts] = useState(() => cleanedDemoProducts)
   const [orders, setOrders] = useState([])
   const [returnRequests, setReturnRequests] = useState([])
   const [loading, setLoading] = useState(false)
@@ -133,11 +193,22 @@ function App() {
     try {
       const response = await fetch(`${API_BASE}/products`)
       const payload = await response.json()
+
+      const fallbackProducts = normalizeProductList(demoProducts)
+
       if (payload?.success && Array.isArray(payload.data?.items)) {
-        setProducts(payload.data.items)
+        setProducts(normalizeProductList(mergeProducts(fallbackProducts, payload.data.items)))
+        return
       }
+
+      if (payload?.success && Array.isArray(payload.data)) {
+        setProducts(normalizeProductList(mergeProducts(fallbackProducts, payload.data)))
+        return
+      }
+
+      setProducts(fallbackProducts)
     } catch {
-      setProducts(demoProducts)
+      setProducts(normalizeProductList(demoProducts))
     } finally {
       setLoading(false)
     }
@@ -510,6 +581,15 @@ function App() {
 }
 
 function HomePage() {
+  const featuredCategories = [
+    { name: 'Fruits', icon: '🍎', count: '16 items' },
+    { name: 'Vegetables', icon: '🥕', count: '18 items' },
+    { name: 'Dairy', icon: '🥛', count: '9 items' },
+    { name: 'Bakery', icon: '🥖', count: '6 items' },
+  ]
+
+  const bestSellerProducts = normalizeProductList(demoProducts).slice(0, 4)
+
   return (
     <>
       <div className="hero-panel">
@@ -570,6 +650,79 @@ function HomePage() {
             <p>Simple exchange and return requests for every order.</p>
           </div>
         </article>
+      </section>
+
+      <div className="promo-banner-row">
+        <article className="promo-banner promo-banner-green">
+          <div>
+            <span className="feature-kicker">Weekend deal</span>
+            <h3>Up to 40% off your weekly essentials.</h3>
+          </div>
+          <Link to="/shop" className="secondary-btn light-btn">Shop deal</Link>
+        </article>
+
+        <article className="promo-banner promo-banner-peach">
+          <div>
+            <span className="feature-kicker">Fresh arrives</span>
+            <h3>New harvest fruit packs delivered daily.</h3>
+          </div>
+          <Link to="/shop" className="secondary-btn light-btn">Browse now</Link>
+        </article>
+      </div>
+
+      <section className="home-section">
+        <div className="section-header">
+          <div>
+            <span className="eyebrow">Fresh picks</span>
+            <h2>Shop by category</h2>
+          </div>
+          <Link to="/shop" className="secondary-btn">Explore all</Link>
+        </div>
+
+        <div className="category-grid">
+          {featuredCategories.map((category) => (
+            <Link key={category.name} to="/shop" className="category-card">
+              <span className="category-emoji">{category.icon}</span>
+              <div>
+                <strong>{category.name}</strong>
+                <small>{category.count}</small>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="home-section">
+        <div className="section-header">
+          <div>
+            <span className="eyebrow">Top sellers</span>
+            <h2>Best-selling staples</h2>
+          </div>
+          <Link to="/shop" className="secondary-btn">View shop</Link>
+        </div>
+
+        <div className="best-seller-grid">
+          {bestSellerProducts.map((product) => (
+            <article key={product._id} className="mini-product-card">
+              <img
+                src={normalizeProductImage(product).imageUrl}
+                alt={product.name}
+                className="mini-product-image"
+                onError={(event) => {
+                  event.currentTarget.src = productImageFallbacks[product.category] || productImageFallbacks.Fruits
+                }}
+              />
+              <div className="mini-product-body">
+                <span className="mini-tag">{product.category}</span>
+                <h3>{product.name}</h3>
+                <div className="mini-meta">
+                  <strong>₹{product.price}</strong>
+                  <span>{product.stock} left</span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
     </>
   )
@@ -810,8 +963,15 @@ function ProductsPage({ products, loading, onAddToCart, onReload }) {
           {visibleProducts.map((product) => (
             <article key={product._id} className="product-card">
               <div className="product-visual">
-                {product.imageUrl ? (
-                  <img src={product.imageUrl} alt={product.name} className="product-image" />
+                {normalizeProductImage(product).imageUrl ? (
+                  <img
+                    src={normalizeProductImage(product).imageUrl}
+                    alt={product.name}
+                    className="product-image"
+                    onError={(event) => {
+                      event.currentTarget.src = productImageFallbacks[product.category] || productImageFallbacks.Fruits
+                    }}
+                  />
                 ) : (
                   <div className="product-image placeholder-image">Fresh</div>
                 )}
