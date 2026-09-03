@@ -731,11 +731,16 @@ function HomePage() {
 
 function AuthModal({ onClose, onLogin, onSuccess }) {
   const [form, setForm] = useState({
-    email: 'admin@minidmart.com',
-    password: 'Admin@123',
+    email: 'staff@minidmart.com',
+    password: 'Staff@123',
   })
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const applyPreset = (email, password) => {
+    setForm({ email, password })
+    setError('')
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -762,6 +767,31 @@ function AuthModal({ onClose, onLogin, onSuccess }) {
         <p className="modal-kicker">WELCOME</p>
         <h2>Sign in to Mini D-Mart</h2>
 
+        <div className="role-preset-bar">
+          <span className="preset-label">Quick Demo Fill:</span>
+          <button
+            type="button"
+            className={`preset-btn ${form.email === 'staff@minidmart.com' ? 'active' : ''}`}
+            onClick={() => applyPreset('staff@minidmart.com', 'Staff@123')}
+          >
+            📋 Staff
+          </button>
+          <button
+            type="button"
+            className={`preset-btn ${form.email === 'admin@minidmart.com' ? 'active' : ''}`}
+            onClick={() => applyPreset('admin@minidmart.com', 'Admin@123')}
+          >
+            ⚡ Admin
+          </button>
+          <button
+            type="button"
+            className={`preset-btn ${form.email === 'customer@minidmart.com' ? 'active' : ''}`}
+            onClick={() => applyPreset('customer@minidmart.com', 'Customer@123')}
+          >
+            🛒 Customer
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="auth-form">
           <label>
             <span>Email</span>
@@ -769,7 +799,7 @@ function AuthModal({ onClose, onLogin, onSuccess }) {
               type="email"
               value={form.email}
               onChange={(event) => setForm({ ...form, email: event.target.value })}
-              placeholder="customer@minidmart.test"
+              placeholder="staff@minidmart.com"
             />
           </label>
 
@@ -790,20 +820,30 @@ function AuthModal({ onClose, onLogin, onSuccess }) {
           </button>
         </form>
 
-        <p className="demo-note">
-          Demo: admin@minidmart.com / Admin@123 | customer@minidmart.test / Customer123!
-        </p>
+        <div className="demo-credentials-card">
+          <p className="demo-title">🔑 Demo Credentials:</p>
+          <ul>
+            <li><strong>Staff:</strong> staff@minidmart.com | Staff@123</li>
+            <li><strong>Admin:</strong> admin@minidmart.com | Admin@123</li>
+            <li><strong>Customer:</strong> customer@minidmart.com | Customer@123</li>
+          </ul>
+        </div>
       </div>
     </div>
   )
 }
 
 function LoginPage({ auth, onLogin }) {
-  const [form, setForm] = useState({ email: 'admin@minidmart.com', password: 'Admin@123' })
+  const [form, setForm] = useState({ email: 'staff@minidmart.com', password: 'Staff@123' })
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
   if (auth) return <Navigate to="/shop" replace />
+
+  const applyPreset = (email, password) => {
+    setForm({ email, password })
+    setError('')
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -819,7 +859,32 @@ function LoginPage({ auth, onLogin }) {
 
   return (
     <div className="panel form-panel">
-      <h2>Login</h2>
+      <h2>Sign In</h2>
+      <div className="role-preset-bar" style={{ marginBottom: '16px' }}>
+        <span className="preset-label">Quick Demo Fill:</span>
+        <button
+          type="button"
+          className={`preset-btn ${form.email === 'staff@minidmart.com' ? 'active' : ''}`}
+          onClick={() => applyPreset('staff@minidmart.com', 'Staff@123')}
+        >
+          📋 Staff
+        </button>
+        <button
+          type="button"
+          className={`preset-btn ${form.email === 'admin@minidmart.com' ? 'active' : ''}`}
+          onClick={() => applyPreset('admin@minidmart.com', 'Admin@123')}
+        >
+          ⚡ Admin
+        </button>
+        <button
+          type="button"
+          className={`preset-btn ${form.email === 'customer@minidmart.com' ? 'active' : ''}`}
+          onClick={() => applyPreset('customer@minidmart.com', 'Customer@123')}
+        >
+          🛒 Customer
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit} className="form-grid">
         <label>
           Email
@@ -840,6 +905,15 @@ function LoginPage({ auth, onLogin }) {
         {error && <div className="error-box">{error}</div>}
         <button type="submit" className="primary-btn full-width">Login</button>
       </form>
+
+      <div className="demo-credentials-card" style={{ marginTop: '20px' }}>
+        <p className="demo-title">🔑 Demo Credentials:</p>
+        <ul>
+          <li><strong>Staff:</strong> staff@minidmart.com | Staff@123</li>
+          <li><strong>Admin:</strong> admin@minidmart.com | Admin@123</li>
+          <li><strong>Customer:</strong> customer@minidmart.com | Customer@123</li>
+        </ul>
+      </div>
     </div>
   )
 }

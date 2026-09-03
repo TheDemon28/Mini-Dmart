@@ -7,14 +7,25 @@ const memoryUsers = global.__miniDmartUsers || (global.__miniDmartUsers = []);
 
 const DEFAULT_ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "admin@minidmart.com").toLowerCase();
 const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@123";
-const DEFAULT_CUSTOMER_EMAIL = "customer@minidmart.test";
-const DEFAULT_CUSTOMER_PASSWORD = "Customer123!";
+const DEFAULT_STAFF_EMAIL = (process.env.STAFF_EMAIL || "staff@minidmart.com").toLowerCase();
+const DEFAULT_STAFF_PASSWORD = process.env.STAFF_PASSWORD || "Staff@123";
+const DEFAULT_CUSTOMER_EMAIL = (process.env.CUSTOMER_EMAIL || "customer@minidmart.com").toLowerCase();
+const DEFAULT_CUSTOMER_PASSWORD = process.env.CUSTOMER_PASSWORD || "Customer@123";
+
 const LEGACY_ADMIN_PASSWORDS = new Set([DEFAULT_ADMIN_PASSWORD, "admin123", "Admin123", "Admin@123"]);
-const LEGACY_CUSTOMER_PASSWORDS = new Set([DEFAULT_CUSTOMER_PASSWORD, "customer123", "Customer123", "customer123!"]);
+const LEGACY_STAFF_PASSWORDS = new Set([DEFAULT_STAFF_PASSWORD, "staff123", "Staff123", "Staff@123"]);
+const LEGACY_CUSTOMER_PASSWORDS = new Set([DEFAULT_CUSTOMER_PASSWORD, "customer123", "Customer123", "customer123!", "Customer123!"]);
 
 const getPasswordCandidates = (role, providedPassword) => {
   const candidates = new Set([String(providedPassword || "")]);
-  const legacyPasswords = role === "admin" ? LEGACY_ADMIN_PASSWORDS : LEGACY_CUSTOMER_PASSWORDS;
+  let legacyPasswords;
+  if (role === "admin") {
+    legacyPasswords = LEGACY_ADMIN_PASSWORDS;
+  } else if (role === "staff") {
+    legacyPasswords = LEGACY_STAFF_PASSWORDS;
+  } else {
+    legacyPasswords = LEGACY_CUSTOMER_PASSWORDS;
+  }
 
   for (const value of legacyPasswords) {
     candidates.add(value);
@@ -42,6 +53,17 @@ const ensureMemoryAdmin = () => {
       email: DEFAULT_ADMIN_EMAIL,
       password: bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10),
       role: "admin",
+      isActive: true,
+    });
+  }
+
+  if (!memoryUsers.some((user) => user.email.toLowerCase() === DEFAULT_STAFF_EMAIL)) {
+    memoryUsers.push({
+      _id: "staff-default",
+      name: "Store Staff",
+      email: DEFAULT_STAFF_EMAIL,
+      password: bcrypt.hashSync(DEFAULT_STAFF_PASSWORD, 10),
+      role: "staff",
       isActive: true,
     });
   }
@@ -156,9 +178,11 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing email or password" });
     }
 
+    const normalizedEmail = String(email).toLowerCase();
+
     if (mongoose.connection.readyState !== 1) {
       ensureMemoryAdmin();
-      const user = memoryUsers.find((entry) => entry.email.toLowerCase() === String(email).toLowerCase());
+      const user = memoryUsers.find((entry) => entry.email.toLowerCase() === normalizedEmail);
       if (!user) {
         return res.status(401).json({ success: false, message: "Invalid credentials" });
       }
@@ -179,7 +203,21 @@ exports.login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email: String(email).toLowerCase() }).select("+password");
+    let user = await User.findOne({ email: normalizedEmail }).select("+password");
+
+    if (!user) {
+      if (normalizedEmail === DEFAULT_ADMIN_EMAIL) {
+        user = await User.create({ name: "System Admin", email: DEFAULT_ADMIN_EMAIL, password: DEFAULT_ADMIN_PASSWORD, role: "admin", isActive: true });
+        user = await User.findById(user._id).select("+password");
+      } else if (normalizedEmail === DEFAULT_STAFF_EMAIL) {
+        user = await User.create({ name: "Store Staff", email: DEFAULT_STAFF_EMAIL, password: DEFAULT_STAFF_PASSWORD, role: "staff", isActive: true });
+        user = await User.findById(user._id).select("+password");
+      } else if (normalizedEmail === DEFAULT_CUSTOMER_EMAIL) {
+        user = await User.create({ name: "Demo Customer", email: DEFAULT_CUSTOMER_EMAIL, password: DEFAULT_CUSTOMER_PASSWORD, role: "customer", isActive: true });
+        user = await User.findById(user._id).select("+password");
+      }
+    }
+
     if (!user) {
       return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
