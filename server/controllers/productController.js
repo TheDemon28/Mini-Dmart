@@ -103,7 +103,7 @@ const getProductsFromStore = () => memoryProducts.filter((product) => product.is
 
 exports.getProducts = async (req, res) => {
   try {
-    const { q, category, minPrice, maxPrice, page = 1, limit = 20 } = req.query;
+    const { q, category, minPrice, maxPrice, page = 1, limit = 100 } = req.query;
 
     if (mongoose.connection.readyState !== 1) {
       let items = getProductsFromStore();
@@ -113,7 +113,7 @@ exports.getProducts = async (req, res) => {
       if (maxPrice) items = items.filter((product) => Number(product.price) <= Number(maxPrice));
 
       const pageNumber = Number(page) || 1;
-      const pageLimit = Number(limit) || 20;
+      const pageLimit = Number(limit) || 100;
       const startIndex = (pageNumber - 1) * pageLimit;
       const paginated = items.slice(startIndex, startIndex + pageLimit);
 
@@ -123,22 +123,32 @@ exports.getProducts = async (req, res) => {
       });
     }
 
+    // Auto-seed MongoDB if DB has no products
+    const dbCount = await Product.countDocuments();
+    if (dbCount === 0) {
+      const itemsToSeed = memoryProducts.map(({ _id, ...rest }) => rest);
+      await Product.insertMany(itemsToSeed);
+      console.log(`Auto-seeded ${itemsToSeed.length} demo products into MongoDB.`);
+    }
+
     const filter = {};
     if (q) filter.name = { $regex: q, $options: "i" };
     if (category) filter.category = category;
     if (minPrice) filter.price = { ...(filter.price || {}), $gte: Number(minPrice) };
     if (maxPrice) filter.price = { ...(filter.price || {}), $lte: Number(maxPrice) };
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const pageNum = Number(page) || 1;
+    const pageLim = Number(limit) || 100;
+    const skip = (pageNum - 1) * pageLim;
 
     const [items, total] = await Promise.all([
-      Product.find(filter).skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+      Product.find(filter).skip(skip).limit(pageLim).sort({ createdAt: -1 }),
       Product.countDocuments(filter),
     ]);
 
-    res.status(200).json({ success: true, data: { items, total, page: Number(page), limit: Number(limit) } });
+    res.status(200).json({ success: true, data: { items, total, page: pageNum, limit: pageLim } });
   } catch (err) {
-    console.error(err);
+    console.error("getProducts error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -151,11 +161,20 @@ exports.getProduct = async (req, res) => {
       return res.status(200).json({ success: true, data: product });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      const demoMatch = memoryProducts.find((item) => String(item._id) === String(req.params.id));
+      if (demoMatch) {
+        const product = await Product.findOne({ name: demoMatch.name });
+        if (product) return res.status(200).json({ success: true, data: product });
+      }
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ success: false, message: "Product not found" });
     res.status(200).json({ success: true, data: product });
   } catch (err) {
-    console.error(err);
+    console.error("getProduct error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -185,7 +204,7 @@ exports.createProduct = async (req, res) => {
     const product = await Product.create({ name, description, category, price, imageUrl, stock, isActive });
     res.status(201).json({ success: true, data: product });
   } catch (err) {
-    console.error(err);
+    console.error("createProduct error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -201,11 +220,15 @@ exports.updateProduct = async (req, res) => {
       return res.status(200).json({ success: true, data: memoryProducts[index] });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
     const product = await Product.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
     if (!product) return res.status(404).json({ success: false, message: "Product not found" });
     res.status(200).json({ success: true, data: product });
   } catch (err) {
-    console.error(err);
+    console.error("updateProduct error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -219,11 +242,15 @@ exports.deleteProduct = async (req, res) => {
       return res.status(200).json({ success: true, message: "Product deleted" });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) return res.status(404).json({ success: false, message: "Product not found" });
     res.status(200).json({ success: true, message: "Product deleted" });
   } catch (err) {
-    console.error(err);
+    console.error("deleteProduct error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

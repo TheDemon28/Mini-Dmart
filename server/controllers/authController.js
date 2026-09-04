@@ -109,6 +109,10 @@ const findUserById = async (id) => {
     return memoryUsers.find((user) => String(user._id) === String(id)) || null;
   }
 
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return User.findOne({ email: `${id}@minidmart.com` }).select("-password");
+  }
+
   return User.findById(id).select("-password");
 };
 

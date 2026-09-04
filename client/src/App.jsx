@@ -124,16 +124,22 @@ const mergeProducts = (...lists) => {
   lists.flat().forEach((product) => {
     if (!product || !product.name) return
 
-    const key = product._id || product.name
-    map.set(key, {
-      ...product,
-      _id: product._id || key,
-      name: product.name,
-      category: product.category || 'General',
-      price: Number(product.price) || 0,
-      stock: Number(product.stock) || 0,
-      imageUrl: product.imageUrl || '',
-    })
+    const key = String(product.name).trim().toLowerCase()
+    const existing = map.get(key)
+
+    const isMongoId = (id) => typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id)
+
+    if (!existing || isMongoId(product._id) || !isMongoId(existing._id)) {
+      map.set(key, {
+        ...product,
+        _id: product._id || key,
+        name: product.name,
+        category: product.category || 'General',
+        price: Number(product.price) || 0,
+        stock: Number(product.stock) || 0,
+        imageUrl: product.imageUrl || '',
+      })
+    }
   })
 
   return Array.from(map.values())
@@ -369,7 +375,7 @@ function App() {
         orderType: checkoutData.orderType,
         deliveryAddress: checkoutData.deliveryAddress || '',
         notes: checkoutData.notes || '',
-        items: cart.map((item) => ({ productId: item._id, quantity: item.quantity })),
+        items: cart.map((item) => ({ productId: item._id, name: item.name, quantity: item.quantity })),
       }),
     })
 
@@ -499,7 +505,7 @@ function App() {
 
         <main className="page-shell">
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<HomePage products={products} />} />
             <Route
               path="/login"
               element={<LoginPage auth={auth} onLogin={handleLogin} />}
@@ -581,7 +587,7 @@ function App() {
   )
 }
 
-function HomePage() {
+function HomePage({ products = [] }) {
   const featuredCategories = [
     { name: 'Fruits', icon: '🍎', count: '16 items' },
     { name: 'Vegetables', icon: '🥕', count: '18 items' },
@@ -589,7 +595,7 @@ function HomePage() {
     { name: 'Bakery', icon: '🥖', count: '6 items' },
   ]
 
-  const bestSellerProducts = cleanedDemoProducts.slice(0, 4)
+  const bestSellerProducts = (products.length ? products : cleanedDemoProducts).slice(0, 4)
 
   return (
     <>

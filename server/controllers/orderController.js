@@ -1,8 +1,34 @@
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
+const User = require("../models/User");
 
 const memoryOrders = global.__miniDmartOrders || (global.__miniDmartOrders = []);
+
+// Helper to resolve valid MongoDB User ID for req.user
+const resolveMongoUserId = async (userPayload) => {
+  if (userPayload?.id && mongoose.Types.ObjectId.isValid(userPayload.id)) {
+    return userPayload.id;
+  }
+  // If user payload has non-ObjectId (e.g. 'customer-default' or 'staff-default')
+  let dbUser = await User.findOne({
+    $or: [
+      { email: `${userPayload?.role || 'customer'}@minidmart.com` },
+      { role: userPayload?.role || 'customer' }
+    ]
+  });
+
+  if (!dbUser) {
+    dbUser = await User.create({
+      name: userPayload?.role === "admin" ? "System Admin" : userPayload?.role === "staff" ? "Store Staff" : "Demo Customer",
+      email: `${userPayload?.role || "customer"}@minidmart.com`,
+      password: `${userPayload?.role || "customer"}@123`,
+      role: userPayload?.role || "customer",
+    });
+  }
+
+  return dbUser._id;
+};
 
 exports.createOrder = async (req, res) => {
   try {
@@ -19,9 +45,17 @@ exports.createOrder = async (req, res) => {
       const productList = global.__miniDmartProducts || [];
 
       for (const item of items) {
-        const product = productList.find((entry) => String(entry._id) === String(item.productId || item.product));
+        const rawId = item.productId || item.product || item._id;
+        const rawName = (item.name || "").trim().toLowerCase();
+
+        let product = productList.find(
+          (entry) =>
+            String(entry._id) === String(rawId) ||
+            (rawName && entry.name.toLowerCase() === rawName)
+        );
+
         if (!product) {
-          return res.status(404).json({ success: false, message: `Product not found: ${item.productId || item.product}` });
+          return res.status(404).json({ success: false, message: `Product not found: ${item.name || rawId}` });
         }
 
         const quantity = Number(item.quantity || 1);
@@ -61,10 +95,45 @@ exports.createOrder = async (req, res) => {
       return res.status(201).json({ success: true, data: newOrder });
     }
 
+    // MongoDB connected mode
+    const userId = await resolveMongoUserId(req.user);
+
     for (const item of items) {
-      const product = await Product.findById(item.productId || item.product);
+      const rawId = item.productId || item.product || item._id;
+      const rawName = item.name ? String(item.name).trim() : "";
+
+      let product = null;
+
+      if (rawId && mongoose.Types.ObjectId.isValid(rawId)) {
+        product = await Product.findById(rawId);
+      }
+
+      if (!product && rawName) {
+        product = await Product.findOne({ name: new RegExp(`^${rawName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") });
+      }
+
+      // If product not found yet, check memory/demo products array for a name match
+      if (!product && (global.__miniDmartProducts || []).length > 0) {
+        const memMatch = global.__miniDmartProducts.find(
+          (entry) => String(entry._id) === String(rawId) || (rawName && entry.name.toLowerCase() === rawName.toLowerCase())
+        );
+        if (memMatch) {
+          product = await Product.findOne({ name: new RegExp(`^${memMatch.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") });
+          if (!product) {
+            product = await Product.create({
+              name: memMatch.name,
+              description: memMatch.description || memMatch.name,
+              category: memMatch.category || "General",
+              price: Number(memMatch.price || 100),
+              stock: Number(memMatch.stock || 50),
+              imageUrl: memMatch.imageUrl || "",
+            });
+          }
+        }
+      }
+
       if (!product) {
-        return res.status(404).json({ success: false, message: `Product not found: ${item.productId || item.product}` });
+        return res.status(404).json({ success: false, message: `Product not found: ${rawName || rawId}` });
       }
 
       const quantity = Number(item.quantity || 1);
@@ -91,7 +160,7 @@ exports.createOrder = async (req, res) => {
     }
 
     const order = await Order.create({
-      user: req.user.id,
+      user: userId,
       items: normalizedItems,
       orderType,
       deliveryAddress,
@@ -101,8 +170,8 @@ exports.createOrder = async (req, res) => {
 
     res.status(201).json({ success: true, data: order });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("createOrder error:", err);
+    res.status(500).json({ success: false, message: err.message || "Server error" });
   }
 };
 
@@ -113,10 +182,15 @@ exports.getMyOrders = async (req, res) => {
       return res.status(200).json({ success: true, data: orders });
     }
 
-    const orders = await Order.find({ user: req.user.id }).sort({ createdAt: -1 }).populate("items.product");
+    let userId = req.user.id;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      userId = await resolveMongoUserId(req.user);
+    }
+
+    const orders = await Order.find({ user: userId }).sort({ createdAt: -1 }).populate("items.product");
     res.status(200).json({ success: true, data: orders });
   } catch (err) {
-    console.error(err);
+    console.error("getMyOrders error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -130,7 +204,7 @@ exports.getAllOrders = async (req, res) => {
     const orders = await Order.find().sort({ createdAt: -1 }).populate("user", "name email role");
     res.status(200).json({ success: true, data: orders });
   } catch (err) {
-    console.error(err);
+    console.error("getAllOrders error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -146,11 +220,16 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(200).json({ success: true, data: memoryOrders[index] });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
     const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!order) return res.status(404).json({ success: false, message: "Order not found" });
     res.status(200).json({ success: true, data: order });
   } catch (err) {
-    console.error(err);
+    console.error("updateOrderStatus error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
