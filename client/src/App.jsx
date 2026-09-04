@@ -2,7 +2,8 @@ import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate } from 'react
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+const rawApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').trim().replace(/\/+$/, '')
+const API_BASE = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl}/api`
 
 const productImageFallbacks = {
   Fruits: 'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?auto=format&fit=crop&w=900&q=80',
